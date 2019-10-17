@@ -16,18 +16,11 @@ public class MulticastServer extends Thread{
     private long SLEEP_TIME = 5000;
 
     public static void main(String[] args) {
-        
+        ManageRequests m = new ManageRequests();
+        m.registerUser("admin", "admin", 1);
+        m.registerUser("user", "user", 2);
     }
 
-    public void registerUser(String userName, String password, int id){
-        File f = new File("Users");
-        try {
-            FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 }
+
