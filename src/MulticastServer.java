@@ -1,8 +1,3 @@
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.*;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
@@ -16,9 +11,11 @@ public class MulticastServer extends Thread{
     private long SLEEP_TIME = 5000;
 
     public static void main(String[] args) {
-        ManageRequests m = new ManageRequests();
-        m.registerUser("admin", "admin", 1);
-        m.registerUser("user", "user", 2);
+        ManageRequests manageRequests = new ManageRequests();
+        /*m.registerUser("admin", "admin", 1);
+        m.registerUser("user", "user", 2);*/
+
+
     }
 
 

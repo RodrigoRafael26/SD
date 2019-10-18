@@ -23,20 +23,9 @@ public class ManageRequests {
         return u;
     }
 
-   /* public boolean usersEmpty(File f){
-        boolean isEmpty;
-        File file = f;
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(f);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            int i = ois.readInt();
+    //manage login
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    //manage research
 
-    }*/
+
 }
