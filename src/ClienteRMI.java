@@ -32,6 +32,41 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface{
         online.changeUserToAdmin(true);
     }
 
+    public static void BackUpServer(boolean preRegisto) {
+        int connection = 0;
+        int count = 0;
+
+        do {
+            count++;
+            try {
+                server = "RMI_BackUp";
+                PORT = 7001;
+                h = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
+                if(!preRegisto) h.newUser(client, online.getUsername());
+            }catch (Exception e1){
+                try{
+                    server = "RMI_Server";
+                    PORT = 7000;
+                    h = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
+                    if(!preRegisto) h.newUser(client, online.getUsername());
+                }catch(Exception e2){
+                    connection++;
+                    try{
+                        Thread.sleep(1000);
+                    }catch(Exception e3){
+                        System.out.println("Problemas com a thread main: " + e3);
+                    }
+                }
+            }
+            if(connection != count) break;
+        }while (connection != 30);
+
+        if(connection == 30){
+            System.out.println("Nao foi possivel estabelecer a ligacao ao servidor, tente mais tarde");
+            System.exit(0);
+        }
+    }
+
     public static void LogOut() {
         while(true){
             try{
@@ -133,40 +168,5 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface{
     }
 
     private static void MainMenu() {
-    }
-
-    public static void BackUpServer(boolean preRegisto) {
-        int connection = 0;
-        int count = 0;
-
-        do {
-            count++;
-            try {
-                server = "RMI_BackUp";
-                PORT = 7001;
-                h = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
-                if(!preRegisto) h.newUser(client, online.getUsername());
-            }catch (Exception e1){
-                try{
-                    server = "RMI_Server";
-                    PORT = 7000;
-                    h = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
-                    if(!preRegisto) h.newUser(client, online.getUsername());
-                }catch(Exception e2){
-                    connection++;
-                    try{
-                        Thread.sleep(1000);
-                    }catch(Exception e3){
-                        System.out.println("Problemas com a thread main: " + e3);
-                    }
-                }
-            }
-            if(connection != count) break;
-        }while (connection != 30);
-
-        if(connection == 30){
-            System.out.println("Nao foi possivel estabelecer a ligacao ao servidor, tente mais tarde");
-            System.exit(0);
-        }
     }
 }
