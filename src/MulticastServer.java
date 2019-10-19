@@ -17,17 +17,33 @@ public class MulticastServer extends Thread{
     private long SLEEP_TIME = 5000;
 
     public static void main(String[] args) {
-        HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
-        HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
+        MulticastServer server = new MulticastServer();
+        server.start();
+    }
+
+    public  MulticastServer(){
+        super("Server is Running");
 
 
-        WebCrawler wc = new WebCrawler();
-        wc.getPageInfo("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
-        System.out.println(searchIndex);
     }
 
 
     public void run(){
+        HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
+        HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
+
+
+        WebCrawler wc = new WebCrawler("http://www.uc.pt/fctuc/dei/");
+        //wc.indexLinks("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
+        //System.out.println(wc.searchIndex);
+        //System.out.println(wc.referenceIndex);
+        try {
+            sleep(10000);
+            searchIndex = wc.getReferenceIndex();
+            referenceIndex = wc.getReferenceIndex();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 

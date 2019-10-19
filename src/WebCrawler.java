@@ -11,12 +11,26 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class WebCrawler extends Thread{
+    public HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
+    public HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
+    private String ws;
 
-    public WebCrawler(){
-
+    public WebCrawler(String ws){
+        this.ws = ws;
+        this.start();
     }
-
-    public void getPageInfo(String ws,  HashMap<String,HashSet<String>> searchIndex, HashMap<String,HashSet<String>> referenceIndex) {
+    public  HashMap<String, HashSet<String>> getReferenceIndex(){
+        System.out.println(this.referenceIndex);
+        return referenceIndex;
+    }
+    public  HashMap<String, HashSet<String>> getSearchIndex(){
+        System.out.println(this.searchIndex);
+        return this.searchIndex;
+    }
+    public void run(){
+        indexLinks(ws);
+    }
+    public void indexLinks(String ws) {
 
         try {
 
@@ -44,6 +58,7 @@ public class WebCrawler extends Thread{
 
                 //index links
                 String s = link.attr("href");
+                //System.out.println(s);
                 if (referenceIndex.get(s) != null) {
                     referenceIndex.get(s).add(ws);
                 }else {
@@ -64,6 +79,7 @@ public class WebCrawler extends Thread{
             e.printStackTrace();
         }
     }
+
 
     private void indexWords(String text,  HashMap<String,HashSet<String>> searchIndex, String ws){
         Map<String, Integer> countMap = new TreeMap<>();
@@ -116,5 +132,6 @@ public class WebCrawler extends Thread{
             }
         }
     }
+
 
 }

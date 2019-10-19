@@ -1,27 +1,45 @@
 import java.io.*;
+import java.util.ArrayList;
 
 public class HandleFiles extends Thread{
 
     public HandleFiles(){}
-    public void registerUser(String userName, String password, int id){
+    public ArrayList<User> readUsers(){
 
         File f = new File("Users");
-        System.out.println(f.exists());
-        boolean isAdmin = !f.exists();
+        ArrayList<User> userList = new ArrayList<>();
         try {
-            FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            User u = createUser(userName, password, isAdmin,id);
+            FileInputStream fos = new FileInputStream(f);
+            ObjectInputStream ois = new ObjectInputStream(fos);
+            userList = (ArrayList<User>) ois.readObject();
+            ois.close();
+
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("User not defined");
+            e.printStackTrace();
+        }
+        return userList;
+    }
+
+    public void writeUsers(ArrayList<User> usersList){
+        File f = new File("Users");
+
+        try{
+            FileOutputStream fos = new FileOutputStream(f, false);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+            oos.writeObject(usersList);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-    public User createUser(String userName, String password, boolean isAdmin, int id){
-        User u = new User(userName, password, isAdmin, id);
-        return u;
-    }
+
 
 
 
