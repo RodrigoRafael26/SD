@@ -36,17 +36,16 @@ class MulticastConnection extends Thread {
 }
 
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
+    private int i;
+    private static ArrayList<ClientInterface> online = new ArrayList<ClientInterface>();
+    private static ArrayList<String> users_online = new ArrayList<String>();
 
     protected ServidorRMI() throws RemoteException {
         super();
     }
 
-    public static void main(String[] args) throws RemoteException {
-
-    }
-
-    public String[] registUser(String username, String password, boolean isAdmin) throws RemoteException{
-        String message = new String();
+    public String[] recordUser(String username, String password) throws RemoteException {
+        String message;
         String message_id = UUID.randomUUID().toString();
         message = "registo ; " + message_id +" ; " + username + " ; " + password;
         MulticastConnection N = new MulticastConnection(message);
@@ -75,15 +74,32 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
     }
 
+//    is not done
+    public String[] checkUser(String username, String password) throws RemoteException {
+        return new String[0];
+    }
+
     public void ping() throws RemoteException {
 
     }
 
-    public String[] RegistUser(String username, String password) throws RemoteException {
-        return new String[0];
+    public void newUser(ClientInterface client, String username) throws RemoteException {
+        i = 0;
+        while(online.get(i) != null){
+            if(online.get(i) != client) i++;
+            else return;
+        }
+        online.set(i, client);
+        users_online.set(i, username);
     }
 
-    public void NewUser(ClientInterface client, String username) throws RemoteException {
+    public void userQuit(ClientInterface client, String username) throws RemoteException {
+        i = 0;
+        while(users_online.get(i).compareTo(username) != 0) i++;
+        online.set(i, null);
+        users_online.set(i, " ");
+    }
 
+    public static void main(String[] args) throws RemoteException {
     }
 }
