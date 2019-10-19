@@ -1,7 +1,13 @@
+
+
+import org.jsoup.select.Elements;
+
 import java.io.*;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class MulticastServer extends Thread{
     private static String MULTICAST_ADDRESS = "224.3.2.1";
@@ -11,13 +17,19 @@ public class MulticastServer extends Thread{
     private long SLEEP_TIME = 5000;
 
     public static void main(String[] args) {
-        ManageRequests manageRequests = new ManageRequests();
-        /*m.registerUser("admin", "admin", 1);
-        m.registerUser("user", "user", 2);*/
+        HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
+        HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
 
 
+        WebCrawler wc = new WebCrawler();
+        wc.getPageInfo("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
+        System.out.println(searchIndex);
     }
 
+
+    public void run(){
+
+    }
 
 }
 

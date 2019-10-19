@@ -10,13 +10,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class WebCrawler {
+public class WebCrawler extends Thread{
 
     public WebCrawler(){
 
     }
 
-    public void getPageInfo(String ws) {
+    public void getPageInfo(String ws,  HashMap<String,HashSet<String>> searchIndex, HashMap<String,HashSet<String>> referenceIndex) {
 
         try {
 
@@ -31,6 +31,8 @@ public class WebCrawler {
             Elements links = doc.select("a[href]");
             for (Element link : links) {
                 // Ignore bookmarks within the page
+
+                //System.out.println(s);
                 if (link.attr("href").startsWith("#")) {
                     continue;
                 }
@@ -40,20 +42,30 @@ public class WebCrawler {
                     continue;
                 }
 
-                System.out.println("Link: " + link.attr("href"));
-                System.out.println("Text: " + link.text() + "\n");
+                //index links
+                String s = link.attr("href");
+                if (referenceIndex.get(s) != null) {
+                    referenceIndex.get(s).add(ws);
+                }else {
+                    referenceIndex.put(s, new HashSet<String>());
+                    referenceIndex.get(s).add(ws);
+                }
+               // System.out.println("Link: " + link.attr("href"));
+
+                //System.out.println("Text: " + link.text() + "\n");
             }
 
-            // Get website text and count words
+
+
+            // Get website text
             String text = doc.text(); // We can use doc.body().text() if we only want to get text from <body></body>
-            countWords(text);
+            indexWords(text, searchIndex, ws);
         }catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    private void countWords(String text){
+    private void indexWords(String text,  HashMap<String,HashSet<String>> searchIndex, String ws){
         Map<String, Integer> countMap = new TreeMap<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))));
         String line;
@@ -91,7 +103,16 @@ public class WebCrawler {
         // Display words and counts
         for (String word : countMap.keySet()) {
             if (word.length() >= 3) { // Shall we ignore small words?
-                System.out.println(word + "\t" + countMap.get(word));
+                //System.out.println(word + "\t" + countMap.get(word));
+                if(searchIndex.get(word)!=null){
+                    searchIndex.get(word).add(ws);
+
+                }else{
+                    searchIndex.put(word, new HashSet<String>());
+                    searchIndex.get(word).add(ws);
+                }
+
+
             }
         }
     }

@@ -1,8 +1,8 @@
 import java.io.*;
 
-public class ManageRequests {
+public class HandleFiles extends Thread{
 
-    public ManageRequests(){}
+    public HandleFiles(){}
     public void registerUser(String userName, String password, int id){
 
         File f = new File("Users");
@@ -23,9 +23,7 @@ public class ManageRequests {
         return u;
     }
 
-    //manage login
 
-    //manage research
 
 
 }

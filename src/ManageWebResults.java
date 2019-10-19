@@ -1,9 +1,8 @@
-public class ManageWebResults {
+public class ManageWebResults extends Thread{
     public ManageWebResults(){};
 
     //create and manage hash map
 
-    //update hashmap
 
     //create List of changes
 

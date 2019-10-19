@@ -1,7 +1,10 @@
+import java.util.ArrayList;
+
 class User {
     private String username;
     private String password;
     private boolean isAdmin;
+    private ArrayList<String> searchHistory;
     private int userID;
 
     User(String username, String password, boolean isAdmin, int userID) {
