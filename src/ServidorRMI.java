@@ -81,6 +81,24 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
     }
 
+    public void addNotification(String ID, String notificado, String notificacao){
+        String protocolo = new String();
+        protocolo = "type | add_notifications ; user_id | " + ID + " ; notificado | " + notificado + " ; notification | " + notificacao;
+        MulticastConnection N = new MulticastConnection(protocolo);
+        protocolo = N.getResponse();
+    }
+
+    public void cleanUsers() throws RemoteException{
+        for(int i=0; i < online.size(); i++){
+            try{
+                if(online.get(i) != null) online.get(i).ping();
+            }catch(Exception e){
+                online.set(i, null);
+                users_online.set(i, " ");
+            }
+        }
+    }
+
     public String[] recordUser(String username, String password) throws RemoteException {
         message = "registo ; " + message_id +" ; " + username + " ; " + password;
         return getAnswer(message);
@@ -89,6 +107,56 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public String[] checkUser(String username, String password) throws RemoteException {
         message = "login ; " + message_id + " ; " + username + " ; " + password;
         return getAnswer(message);
+    }
+
+//    nao esta feito
+    public String[] searchWeb(String searchText) throws RemoteException {
+        return new String[0];
+    }
+
+    public boolean givePrivileges(String usernameOldAdmin, boolean isAdmin, String usernameFutureAdmin) throws RemoteException {
+        i = 0;
+        String message = new String();
+        message = "type | privileges ; username | " + usernameFutureAdmin + " ; editor | " + isAdmin;
+        connection = new MulticastConnection(message);
+        message = connection.getResponse();
+        process_message = message.split(" ; ");
+        aux = process_message[2].split(" | ");
+
+        if(aux[1].compareTo("true") == 0){
+            for(i = 0; i < users_online.size(); i++){
+                if(users_online.get(i) != null && !users_online.get(i).isEmpty()) {
+                    System.out.println(users_online.get(i));
+                    if (users_online.get(i).compareTo(usernameFutureAdmin) == 0) {
+                        if (isAdmin) {
+                            try {
+                                online.get(i).printClient("Foi promovido a administrador!");
+                                online.get(i).changeUserToAdmin(true);
+                            } catch (Exception e) {
+                                addNotification(usernameOldAdmin, usernameFutureAdmin, "Foi promovido a administrador!");
+                                cleanUsers();
+                            }
+                        } else {
+                            try {
+                                online.get(i).printClient("Um administrador tirou os seu previlegios");
+                                online.get(i).changeUserToAdmin(false);
+                            } catch (Exception e) {
+                                addNotification(usernameOldAdmin, usernameFutureAdmin, "Um administrador tirou os seu previlegios");
+                                cleanUsers();
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+            if(i == users_online.size()){
+                System.out.println("2");
+                if(isAdmin) addNotification(usernameOldAdmin, usernameFutureAdmin, "Parabens, foi promovido a editor!");
+                else addNotification(usernameOldAdmin, usernameFutureAdmin, "Um editor tirou os seu previlegios");
+                return true;
+            }
+        }
+        return false;
     }
 
     public void newUser(ClientInterface client, String username) throws RemoteException {
