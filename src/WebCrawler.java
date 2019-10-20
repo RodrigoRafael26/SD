@@ -9,28 +9,36 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class WebCrawler extends Thread{
-    public HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
-    public HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
+    public HashMap<String, HashSet<String>> searchIndex;
+    public HashMap<String, HashSet<String>> referenceIndex;
+    private ArrayBlockingQueue<String> linkQueue;
     private String ws;
+    private int recursionLevel;
+    private ArrayList<String> indexedUrls;
+    //define max threads!!!
 
-    public WebCrawler(String ws){
+    public WebCrawler(String ws, HashMap<String, HashSet<String>> searchIndex, HashMap<String, HashSet<String>> referenceIndex){
         this.ws = ws;
+        this.searchIndex = searchIndex;
+        this.referenceIndex = referenceIndex;
+        this.recursionLevel = 0;
+        this.indexedUrls = new ArrayList<>();
+        this.linkQueue = new ArrayBlockingQueue<String>(30, true);
         this.start();
     }
-    public  HashMap<String, HashSet<String>> getReferenceIndex(){
-        System.out.println(this.referenceIndex);
-        return referenceIndex;
-    }
-    public  HashMap<String, HashSet<String>> getSearchIndex(){
-        System.out.println(this.searchIndex);
-        return this.searchIndex;
-    }
+
     public void run(){
+
         indexLinks(ws);
+
     }
-    public void indexLinks(String ws) {
+
+
+    //A função indexLinks vai ser recursiva
+    private void indexLinks(String ws) {
 
         try {
 
@@ -59,22 +67,34 @@ public class WebCrawler extends Thread{
                 //index links
                 String s = link.attr("href");
                 //System.out.println(s);
+
                 if (referenceIndex.get(s) != null) {
                     referenceIndex.get(s).add(ws);
                 }else {
                     referenceIndex.put(s, new HashSet<String>());
                     referenceIndex.get(s).add(ws);
                 }
-               // System.out.println("Link: " + link.attr("href"));
 
-                //System.out.println("Text: " + link.text() + "\n");
+                //Add links to a queue
+
+                //create other thread to go through that queue (recursividade)
+                this.recursionLevel++;
+                if(recursionLevel <= 5){
+                    if(!indexedUrls.contains(s)) {
+                        System.out.println(s + " " + this.recursionLevel);
+                        indexedUrls.add(s);
+                        indexLinks(s);
+
+                    }
+                    String text = doc.text(); // We can use doc.body().text() if we only want to get text from <body></body>
+                    indexWords(text, searchIndex, ws);
+                    this.recursionLevel--;
+                }
+
             }
 
-
-
             // Get website text
-            String text = doc.text(); // We can use doc.body().text() if we only want to get text from <body></body>
-            indexWords(text, searchIndex, ws);
+
         }catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,3 @@
-
-
 import org.jsoup.select.Elements;
 
 import java.io.*;
@@ -15,6 +13,11 @@ public class MulticastServer extends Thread{
     //private static int PORT_MANAGE = 4324;
     //private int PORT_RECEIVE = 4322;
     private long SLEEP_TIME = 5000;
+    public HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
+    public HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
+    public static boolean reading;
+    public static boolean writing;
+    public static boolean update;
 
     public static void main(String[] args) {
         MulticastServer server = new MulticastServer();
@@ -23,29 +26,32 @@ public class MulticastServer extends Thread{
 
     public  MulticastServer(){
         super("Server is Running");
-
-
     }
 
 
     public void run(){
-        HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
-        HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
 
+        //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
+        WebCrawler wc = new WebCrawler("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
 
-        WebCrawler wc = new WebCrawler("http://www.uc.pt/fctuc/dei/");
-        //wc.indexLinks("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
-        //System.out.println(wc.searchIndex);
-        //System.out.println(wc.referenceIndex);
         try {
-            sleep(10000);
-            searchIndex = wc.getReferenceIndex();
-            referenceIndex = wc.getReferenceIndex();
+            sleep(SLEEP_TIME*2);
+            System.out.println(referenceIndex);
+            System.out.println(searchIndex);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+        return;
     }
 
 }
+
+//this class is used to synch the hashmaps of the diferent multicast servers
+class ConnectServersMulti {
+    //Needs 2 TCP connections
+}
+
+
+
+
 

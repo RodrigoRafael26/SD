@@ -11,6 +11,7 @@ class User {
         this.username = username;
         this.password = password;
         this.isAdmin = isAdmin;
+        this.searchHistory = new ArrayList<>();
         this.userID = userID;
     }
 
@@ -28,5 +29,13 @@ class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public void addToHist(String url){
+        this.searchHistory.add(url);
+    }
+
+    public ArrayList<String> getSearchHistory (){
+        return searchHistory;
     }
 }
