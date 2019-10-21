@@ -16,7 +16,7 @@ class MulticastConnection extends Thread {
         super("Multicast Connection");
         this.message = message;
         String[] aux = message.split(" ; ");
-        String[] aux2 = aux[1].split(" : ");
+        String[] aux2 = aux[1].split(" | ");
         this.ID = aux2[1];
     }
 
@@ -37,6 +37,7 @@ class MulticastConnection extends Thread {
 
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
     private int i;
+    private int clientPort = 7000;
     private static ArrayList<ClientInterface> online = new ArrayList<ClientInterface>();
     private static ArrayList<String> users_online = new ArrayList<String>();
     String message;
@@ -48,6 +49,26 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     protected ServidorRMI() throws RemoteException {
         super();
+    }
+
+    public int hello() throws RemoteException {
+        clientPort++;
+        return clientPort;
+    }
+
+    @Override
+    public boolean logout(String user) throws RemoteException {
+        return false;
+    }
+
+    @Override
+    public int register(String username, String password) throws RemoteException {
+        return 0;
+    }
+
+    @Override
+    public int login(String username, String password) throws RemoteException {
+        return 0;
     }
 
     public void ping() throws RemoteException {
@@ -64,7 +85,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         message_processed = new ArrayList<String>();
 
         for(String s : process_message){
-            aux = s.split(" ; ");
+            aux = s.split(" | ");
             message_processed.add(aux[0]);
             message_processed.add(aux[1]);
         }
@@ -100,18 +121,18 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public String[] recordUser(String username, String password) throws RemoteException {
-        message = "registo ; " + message_id +" ; " + username + " ; " + password;
+        message = "type | registo ; message_id | " + message_id +"; username | " + username + "; password | " + password;
         return getAnswer(message);
     }
 
     public String[] checkUser(String username, String password) throws RemoteException {
-        message = "login ; " + message_id + " ; " + username + " ; " + password;
+        message = "type | login ; message_id | " + message_id + "; username | " + username + "; password | " + password;
         return getAnswer(message);
     }
 
 //    nao esta feito
-    public String[] searchWeb(String searchText) throws RemoteException {
-        return new String[0];
+    public String searchWeb(String searchText) throws RemoteException {
+        return new String();
     }
 
     public boolean givePrivileges(String usernameOldAdmin, boolean isAdmin, String usernameFutureAdmin) throws RemoteException {
@@ -174,6 +195,10 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         while(users_online.get(i).compareTo(username) != 0) i++;
         online.set(i, null);
         users_online.set(i, " ");
+    }
+
+    public static void searchMenu() {
+
     }
 
     public static void main(String[] args) throws RemoteException {
