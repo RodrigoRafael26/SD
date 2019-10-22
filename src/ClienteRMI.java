@@ -1,12 +1,10 @@
-import netscape.javascript.JSUtil;
-
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.rmi.*;
 
@@ -16,7 +14,8 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static int perk = 4;
     private boolean isAdmin;
     private int userID;
-    private static String server = "RMI_Server";
+    private static String RMIhost;
+    private static String myHost;
     private static int PORT;
     public static ServerInterface serverInterface;
     public static ClientInterface clientInterface;
@@ -44,7 +43,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             try {
                 Registry registry = LocateRegistry.createRegistry(PORT);
-                registry.rebind(server, clientInterface);
+                registry.rebind(RMIhost, clientInterface);
             } catch (ExportException e1) {
                 try {
                     UnicastRemoteObject.unexportObject(clientInterface, true);
@@ -55,9 +54,13 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
+    public String getUser() throws RemoteException {
+        return user;
+    }
+
     private static void startsRMIConnection() {
         try {
-            serverInterface = (ServerInterface) LocateRegistry.getRegistry(server, PORT).lookup(server);
+            serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, PORT).lookup(RMIhost);
         } catch (AccessException e) {
             retryRMIConnection();
         } catch (RemoteException e) {
@@ -71,7 +74,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             try {
 //                Thread.sleep(1000);
-                serverInterface = (ServerInterface) LocateRegistry.getRegistry(server, PORT).lookup(server);
+                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, PORT).lookup(RMIhost);
                 PORT = serverInterface.hello();
                 if (user != null)
                     setClientInterface();
@@ -91,51 +94,38 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         online.changeUserToAdmin(true);
     }
 
-    public static void BackUpServer(boolean preRegisto) {
-        int connection = 0;
-        int count = 0;
+    private static void registoLoginMenu() {
+        int option;
+        boolean verifier = false;
 
-        do {
-            count++;
-            try {
-                server = "RMI_BackUp";
-                PORT = 7001;
-                serverInterface = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
-                if (!preRegisto) serverInterface.newUser(client, online.getUsername());
-            } catch (Exception e1) {
-                try {
-                    server = "RMI_Server";
-                    PORT = 7000;
-                    serverInterface = (ServerInterface) LocateRegistry.getRegistry(PORT).lookup(server);
-                    if (!preRegisto) serverInterface.newUser(client, online.getUsername());
-                } catch (Exception e2) {
-                    connection++;
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e3) {
-                        System.out.println("Problemas com a thread main: " + e3);
-                    }
-                }
-            }
-            if (connection != count) break;
-        } while (connection != 30);
-
-        if (connection == 30) {
-            System.out.println("Nao foi possivel estabelecer a ligacao ao servidor, tente mais tarde");
-            System.exit(0);
-        }
-    }
-
-    public static void LogOut() {
+        System.out.println("\n\t\t!!!WELCOME!!!\n");
         while (true) {
+            System.out.println("\n\t1) Registar");
+            System.out.println("\n\t2) Login");
+            System.out.println("\n\t0) Exit");
+
             try {
-                serverInterface.userQuit(client, online.getUsername());
-                break;
-            } catch (Exception c) {
-                BackUpServer(false);
+                option = Integer.parseInt(sc.nextLine().replaceAll("^[,\\s]+", ""));
+                if (option == 1 || option == 2) {
+                    validationMenu(option);
+                }else if(option == 0) {
+                    if(user != null) {
+                        while(!verifier){
+                            try {
+                                verifier = serverInterface.logout(user);
+                            }catch (RemoteException e) {
+                                retryRMIConnection();
+                            }
+                        }
+                    }
+                    break;
+                }
+                else
+                    System.out.println("Digita uma opcao valida!");
+            } catch (RemoteException e) {
+                System.out.println("So numeros pff");
             }
         }
-        System.exit(0);
     }
 
     private static void mainMenu() throws RemoteException {
@@ -144,16 +134,15 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             // user sem login
             System.out.println("\t\tMAIN MENU\n");
-            System.out.println("\n\t1Pesquisa por palavras");
-            System.out.println("\n\t2)Pesquisa por URL");
+            System.out.println("\n\t1Pesquisa");
             if (perk == 2) { //user normal
-                System.out.println("\n\t3)Consulta da lista de páginas com ligacao para uma página especifica");
-                System.out.println("\n\t4)Histórico");
+                System.out.println("\n\t2)Consulta da lista de páginas com ligacao para uma página especifica");
+                System.out.println("\n\t3)Histórico");
             }
             if (perk == 1) { // admin
-                System.out.println("\n\t5) 10 paginas mais importantes");
-                System.out.println("\n\t6) 10 pesquisas mais realizadas");
-                System.out.println("\n\t7) Dar privilegios de admin");
+                System.out.println("\n\t4) 10 paginas mais importantes");
+                System.out.println("\n\t5) 10 pesquisas mais realizadas");
+                System.out.println("\n\t6) Dar privilegios de admin");
             }
             System.out.println("\n\t0) Logout\n\n");
 
@@ -174,21 +163,49 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 return;
             }
             if (option == 1)
-                searchByWords();
-//            else if (option == 2)
-//                searchByUrl();
-//            else if (option == 3 && perk == 2)
-//                pagesList();
-            else if (option == 4 && perk == 2)
+                search();
+            else if (option == 2 && perk == 2)
+                pagesList();
+            else if (option == 3 && perk == 2)
                 verHistorico();
-//            else if (option == 5 && perk == 1)
-//                tenMostImportant();
-//            else if (option == 6 && perk == 1)
-//                tenMostSearched();
-            else if (option == 7 && perk == 1)
+            else if (option == 4 && perk == 1)
+                tenMostImportant();
+            else if (option == 5 && perk == 1)
+                tenMostSearched();
+            else if (option == 6 && perk == 1)
                 givePrivileges();
             else
                 System.out.println("Escolha uma opcao valida!");
+        }
+    }
+
+    private static void tenMostSearched() {
+        String[] resposta = new String[10];
+
+        while(resposta[0].length() == 0) {
+            try {
+                resposta = serverInterface.tenMostImportant();
+            } catch (RemoteException e) {
+                retryRMIConnection();
+            }
+        }
+        for (int i = 0; i < resposta.length; i++) {
+            System.out.println(i + ") " + resposta[i]);
+        }
+    }
+
+    private static void tenMostImportant() {
+        String[] resposta = new String[10];
+
+        while (resposta[0].length() == 0) {
+            try {
+                resposta = serverInterface.tenMostImportant();
+            } catch (RemoteException e) {
+                retryRMIConnection();
+            }
+        }
+        for (int i = 0; i < resposta.length; i++) {
+            System.out.println(i + ") " + resposta[i]);
         }
     }
 
@@ -197,7 +214,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
         while(resposta != null) {
             try {
-                resposta = serverInterface.hystoric();
+                resposta = serverInterface.historic(user);
             } catch (RemoteException e) {
                 retryRMIConnection();
             }
@@ -205,12 +222,12 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         System.out.println(resposta);
     }
 
-    private static void searchByWords() {
+    private static void search() {
         boolean validation = false;
         String resposta = null;
         String keyword = null;
 
-        System.out.println("\nDigita a/as keyword/s: ");
+        System.out.println("\nDigite: ");
         while (!validation){
             keyword = sc.nextLine().replaceAll("^[,\\s]+", "");
             validation = stringChecker(keyword);
@@ -224,6 +241,41 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             }
         }
         System.out.println(resposta);
+    }
+
+    private static void pagesList() {
+        String aux, url = null;
+        ArrayList<String> resposta = new ArrayList<String>();
+        int aux_int;
+        boolean validation = false;
+
+        while(!validation){
+            System.out.println("Formato: XXXXXX.extensao\nPor exemplo: google.com");
+            System.out.println("\nURL: ");
+            url = sc.nextLine();
+            if(url.contains(".")){
+                aux = url;
+                aux_int = url.length() - aux.replaceAll(".", "").length();
+                if(aux_int + 1 != url.length()) {
+                    System.out.println("Write in the right format please!");
+                    continue;
+                }else{
+                    validation = stringChecker(url);
+                }
+            }
+        }
+        while(resposta.size() == 0){
+            try {
+                resposta = serverInterface.pagesList(url);
+                if (resposta.size() > 0) {
+                    for(int i = 0; i < resposta.size(); i++)
+                        System.out.println(resposta.get(i));
+                }
+            }catch (RemoteException e){
+                retryRMIConnection();
+            }
+        }
+        
     }
 
     private static void validationMenu(int option) throws RemoteException {
@@ -310,136 +362,51 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return true;
     }
 
-////    ainda nao esta terminado
-//    public static void recordUser() throws RemoteException {
-//        String[] respostaServidor;
-//        String confirm_password = "";
-//        boolean pass_confirmed = false;
-//        boolean hasRegisted = false;
-//
-//        while(true){
-//            System.out.println("Digite o seu username:\n");
-//            try {
-//                username = reader.readLine();
-//            } catch (IOException e) {
-//                System.out.println("Catch an IOException");
-//            }
-//            System.out.println("Digite a sua password:\n");
-//            try {
-//                password = reader.readLine();
-//            } catch (IOException e) {
-//                System.out.println("Catch an IOException");
-//            }
-//            while(!pass_confirmed) {
-//                System.out.println("Confirme a sua password:\n");
-//                try {
-//                    confirm_password = reader.readLine();
-//                } catch (IOException e) {
-//                    System.out.println("Catch an IOException");
-//                }
-//                if (password.compareTo(confirm_password) == 0) pass_confirmed = true;
-//                else {
-//                    System.out.println("Errado! Recomece o seu registo!");
-//                    recordUser();
-//                    return;
-//                }
-//            }
-//
-//            // receber ultimo ID de user
-//            // se for o primeiro é admin isAdmin = true;
-//            while(true) {
-//                try {
-//                    respostaServidor = serverInterface.recordUser(username, password);
-//                    if (respostaServidor[0].compareTo("true") == 0) {
-//                        System.out.println("Registo efectuado com sucesso!");
-//                        hasRegisted = true;
-//                    }
-//                    break;
-//                } catch (Exception e) {
-//                    BackUpServer(true);
-//                }
-//                if(!hasRegisted){
-//                    int choice = 3;
-//                    System.out.println("Username ja esta em uso!");
-//                    System.out.println("Pretende:\n1.Tentar outra vez\n2.Fazer Login\n\n0.Exit");
-//                    while (true){
-//                        try {
-//                            Scanner sc2 = new Scanner(System.in);
-//                            choice = sc2.nextInt();
-//                            if(choice != 0 && choice != 1 && choice != 2) System.out.println("Opcao Invalida");
-//                            else break;
-//                        } catch (Exception err) {
-//                            System.out.println("Escreva um digito por favor");
-//                        }
-//                    }
-//                    if(choice==2) signIn();
-//                    else if(choice==0) LogOut();
-//                }
-//                else{
-//                    break;
-//                }
-//            }
-//        }
-////        if(respostaServidor[2].compareTo("true")==0) online = new User(username, password,true, Integer.parseInt(respostaServidor[1]));
-////        else online = new User(username, password,false, Integer.parseInt(respostaServidor[1]));
-////        MainScreen();
-//    }
-//
-////    nao esta feito
-//    public static void signIn() throws RemoteException {
-//        boolean is_logged = false;
-//        String[] resposta = new String[3];
-//        int option;
-//
-//        while(!is_logged) {
-//            System.out.println("\nUsername: ");
-//            try {
-//                username = reader.readLine();
-//            } catch (Exception e) {
-//                System.out.println("Problems with the reader");
-//            }
-//            System.out.println("\nPassword: ");
-//            try {
-//                password = reader.readLine();
-//            } catch (Exception e) {
-//                System.out.println("Problems with the reader");
-//            }
-//            while(true) {
-//                try {
-//                    resposta = serverInterface.checkUser(username, password);
-//                    if(resposta[0].compareTo("true") == 0) {
-//                        System.out.println("Sign In efetuado com sucesso!");
-//                        is_logged = true;
-//                    } else {
-//                        System.out.println("Username ou password errados!");
-//                        System.out.println("\n1.Tentar outra vez\n2.Registar\n\n0.Exit");
-//                        option = askOption();
-//                        if(option == 1) signIn();
-//                        else if(option == 2) recordUser();
-//                        break;
-//                    }
-//                } catch (Exception e) {
-//                    BackUpServer(false);
-//                }
-//            }
-//        }
-//        if(resposta[2].compareTo("true") == 0) online = new User(username, password, true, Integer.parseInt(resposta[1]));
-//        else online = new User(username, password, false, Integer.parseInt(resposta[1]));
-//        mainScreen();
-//    }
-
     private static void givePrivileges() throws RemoteException {
-        System.out.println("\nUsername de quem terá privilégio: ");
-        String username = sc.nextLine();
-        while(true){
-            try{
-                serverInterface.givePrivileges(online.getUsername(), online.isAdmin(), username);
-                Thread.sleep(500);
-                break;
-            } catch (Exception re) {
-                BackUpServer(false);
+        boolean validation = false;
+        boolean verifier;
+        String username = null;
+
+        while(!validation){
+            System.out.println("\nUsername de quem terá privilégio: ");
+            username = sc.nextLine();
+            if(username.contains(" ")){
+                System.out.println("Username cannot contain spaces");
+                continue;
             }
+            validation = stringChecker(username);
+        }
+
+        try{
+            verifier = serverInterface.givePrivileges(online.getUsername(), username);
+            if (verifier) System.out.println("Permissions given to " + username);
+            else System.out.println("Could not give permissions to " + username);
+        } catch (RemoteException re) {
+            retryRMIConnection();
         }
         mainMenu();
+    }
+
+    public static void main(String args[]) throws RemoteException {
+        RMIhost = args[0];
+        myHost = args[1];
+
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run() {
+                while(true) {
+                    try {
+                        if(user!=null)
+                            serverInterface.logout(user);
+                        break;
+                    } catch (RemoteException e) {
+                        retryRMIConnection();
+                    }
+                }
+            }
+        });
+        clientInterface = new ClienteRMI();
+        startsRMIConnection();
+        registoLoginMenu();
+        System.exit(1);
     }
 }
