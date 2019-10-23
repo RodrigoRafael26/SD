@@ -2,23 +2,27 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class HandleFiles{
 
     public HandleFiles(){}
 
-    public ArrayList<User> readUsers(){
+    public CopyOnWriteArrayList<User> readUsers(){
 
         File f = new File("Users");
-        ArrayList<User> userList = null;
+        CopyOnWriteArrayList<User> userList = null;
         try {
             FileInputStream fos = new FileInputStream(f);
             ObjectInputStream ois = new ObjectInputStream(fos);
-            userList = (ArrayList<User>) ois.readObject();
+            userList = (CopyOnWriteArrayList<User>) ois.readObject();
             ois.close();
 
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
+            return null;
+        }catch (StreamCorruptedException e){
+            System.out.println("File corrupted restart system");
             return null;
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,7 +76,10 @@ public class HandleFiles{
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
             return null;
-        } catch (IOException e) {
+        } catch (StreamCorruptedException e) {
+            System.out.println("File corrupted restart system");
+            return null;
+        }catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -107,7 +114,10 @@ public class HandleFiles{
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
             return null;
-        } catch (IOException e) {
+        }catch (StreamCorruptedException e) {
+            System.out.println("File corrupted restart system");
+            return null;
+        }catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -115,6 +125,37 @@ public class HandleFiles{
         return searchMap;
     }
 
+    public ServerConfig readConfig(){
+        String multicast_address;
+        int port;
+        int serverID;
+
+        File config_file = new File("config_1.txt");
+        String[] st = new String[4];
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(config_file));
+
+            int i = 0;
+            while((st[i] = br.readLine()) != null){
+                i++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }catch (StreamCorruptedException e){
+            System.out.println("File corrupted restart system");
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        port = Integer.parseInt(st[0]);
+        multicast_address = st[1];
+        serverID = Integer.parseInt(st[2]);
+
+        ServerConfig s = new ServerConfig(port,multicast_address,serverID);
+        return s;
+    }
+
+    //escrever funcoes para ler e escrever o array de links a indexar
 
 
 

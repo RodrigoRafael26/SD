@@ -1,7 +1,10 @@
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import sun.security.validator.ValidatorException;
 
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -10,98 +13,96 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WebCrawler extends Thread{
-    public HashMap<String, HashSet<String>> searchIndex;
-    public HashMap<String, HashSet<String>> referenceIndex;
-    private ArrayBlockingQueue<String> linkQueue;
-    private String ws;
-    private int recursionLevel;
+    //public HashMap<String, HashSet<String>> searchIndex;
+    //public HashMap<String, HashSet<String>> referenceIndex;
+    public Storage st;
+    private int numURL;
     private ArrayList<String> indexedUrls;
-    //define max threads!!!
 
-    public WebCrawler(String ws, HashMap<String, HashSet<String>> searchIndex, HashMap<String, HashSet<String>> referenceIndex){
-        this.ws = ws;
-        this.searchIndex = searchIndex;
-        this.referenceIndex = referenceIndex;
-        this.recursionLevel = 0;
-        this.indexedUrls = new ArrayList<>();
-        this.linkQueue = new ArrayBlockingQueue<String>(30, true);
+
+    public WebCrawler(Storage st){
+        this.numURL = 0;
+        this.st = st;
         this.start();
     }
 
+
     public void run(){
 
-        indexLinks(ws);
+        this.indexLinks();
 
     }
 
 
-    //A função indexLinks vai ser recursiva
-    private void indexLinks(String ws) {
+    //A função indexLinks vai ser iterativa
+    private void indexLinks() {
 
-        try {
+        while(this.numURL <3000){
 
-            if (!ws.startsWith("http://") && !ws.startsWith("https://"))
-                ws = "http://".concat(ws);
+            try {
+                String ws = st.getLink();
+                if (!ws.startsWith("http://") && !ws.startsWith("https://"))
+                    ws = "http://".concat(ws);
 
-            Document doc = Jsoup.connect(ws).get();
-            // Title
-            System.out.println(doc.title() + "\n");
+                Document doc = Jsoup.connect(ws).get();
+                // Title
+                System.out.println(doc.title() + "\n");
 
-            // Get all links
-            Elements links = doc.select("a[href]");
-            for (Element link : links) {
-                // Ignore bookmarks within the page
+                // Get all links
+                Elements links = doc.select("a[href]");
+                for (Element link : links) {
+                    // Ignore bookmarks within the page
 
-                //System.out.println(s);
-                if (link.attr("href").startsWith("#")) {
-                    continue;
-                }
-
-                // Shall we ignore local links? Otherwise we have to rebuild them for future parsing
-                if (!link.attr("href").startsWith("http")) {
-                    continue;
-                }
-
-                //index links
-                String s = link.attr("href");
-                //System.out.println(s);
-
-                if (referenceIndex.get(s) != null) {
-                    referenceIndex.get(s).add(ws);
-                }else {
-                    referenceIndex.put(s, new HashSet<String>());
-                    referenceIndex.get(s).add(ws);
-                }
-
-                //Add links to a queue
-
-                //create other thread to go through that queue (recursividade)
-                this.recursionLevel++;
-                if(recursionLevel <= 5){
-                    if(!indexedUrls.contains(s)) {
-                        System.out.println(s + " " + this.recursionLevel);
-                        indexedUrls.add(s);
-                        indexLinks(s);
-
+                    if (link.attr("href").startsWith("#")) {
+                        continue;
                     }
+
+                    // Shall we ignore local links? Otherwise we have to rebuild them for future parsing
+                    if (!link.attr("href").startsWith("http")) {
+                        continue;
+                    }
+
+                    //index links
+                    String s = link.attr("href");
+                    //System.out.println(s);
+
+                    st.addReferenceToHash(ws, s);
+
+                    //Add links to a queue
+                    st.addLinkToQueue(s);
+
+                    System.out.println(s + " is indexed " + numURL);
+
+                    // Get website text
                     String text = doc.text(); // We can use doc.body().text() if we only want to get text from <body></body>
-                    indexWords(text, searchIndex, ws);
-                    this.recursionLevel--;
+                    indexWords(text, ws);
+                    this.numURL++;
+
                 }
 
+
+
+
+            } catch (UnsupportedMimeTypeException e){
+                continue;
+            } catch (HttpStatusException e){
+                continue;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            // Get website text
-
-        }catch (IOException e) {
-            e.printStackTrace();
         }
+        st.linkList.clear();
+        this.numURL = 0;
+        System.out.println(st.getReferenceHash());
+        System.out.println(st.getSearchHash());
     }
 
 
-    private void indexWords(String text,  HashMap<String,HashSet<String>> searchIndex, String ws){
+    private void indexWords(String text, String ws){
         Map<String, Integer> countMap = new TreeMap<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))));
         String line;
@@ -140,13 +141,8 @@ public class WebCrawler extends Thread{
         for (String word : countMap.keySet()) {
             if (word.length() >= 3) { // Shall we ignore small words?
                 //System.out.println(word + "\t" + countMap.get(word));
-                if(searchIndex.get(word)!=null){
-                    searchIndex.get(word).add(ws);
 
-                }else{
-                    searchIndex.put(word, new HashSet<String>());
-                    searchIndex.get(word).add(ws);
-                }
+                st.addWordToHash(word, ws);
 
 
             }

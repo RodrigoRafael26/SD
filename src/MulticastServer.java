@@ -6,52 +6,181 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.FileHandler;
 
 public class MulticastServer extends Thread{
-    private static String MULTICAST_ADDRESS = "224.3.2.1";
-    private static int PORT_SEND = 4321;
-    //private static int PORT_MANAGE = 4324;
-    //private int PORT_RECEIVE = 4322;
+    private String multicast_address;
+    private int port;
+    private int server_id;
     private long SLEEP_TIME = 5000;
-    public HashMap<String, HashSet<String>> searchIndex = new HashMap<String,HashSet<String>>();
-    public HashMap<String, HashSet<String>> referenceIndex = new HashMap<String,HashSet<String>>();
-    public static boolean reading;
-    public static boolean writing;
-    public static boolean update;
+    Storage st;
+
+
+
 
     public static void main(String[] args) {
         MulticastServer server = new MulticastServer();
+
         server.start();
     }
 
     public  MulticastServer(){
+
         super("Server is Running");
+        try {
+            FileHandler fileHandler = new FileHandler();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.st = new Storage();
+        this.port = st.getServerConfig().getPort();
+        this.multicast_address = st.getServerConfig().getAddress();
+        this.server_id = st.getServerConfig().getServer_ID();
     }
 
 
     public void run(){
 
         //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
-        WebCrawler wc = new WebCrawler("http://www.uc.pt/fctuc/dei/", searchIndex, referenceIndex);
+        WebCrawler wc = new WebCrawler(st);
+        st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
+        ManageRequests mr = new ManageRequests(st);
 
-        try {
-            sleep(SLEEP_TIME*2);
-            System.out.println(referenceIndex);
-            System.out.println(searchIndex);
-        } catch (InterruptedException e) {
+        //tem de mandar as configs do socket TCP por multicast
+
+        /*
+        MulticastSocket socket = null;
+        try{
+            socket = new MulticastSocket(PORT);
+            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+            socket.joinGroup(group);
+
+            while(true){
+                byte[] socketBuffer = new byte[8];
+                DatagramPacket request = new DatagramPacket(socketBuffer, socketBuffer.length);
+                socket.receive(request);
+
+                byte[] data = request.getData();
+                String s = new String(data,0,data.length);
+
+                //chamar manage requests aqui
+                System.out.println("Port " + request.getPort() + " on " + request.getAddress() +" sent this message:" + s);
+
+                String r = "CALA A PUTA DA BOCA";
+                byte[] bufSend = r.getBytes();
+
+
+                DatagramPacket response = new DatagramPacket(bufSend, bufSend.length, request.getAddress(), request.getPort());
+
+                socket.send(response);
+
+
+            }
+
+
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        return;
+        }finally{
+            //guardar mensagens que estiverem por enviar
+            socket.close();
+        }*/
+
     }
 
 }
 
-//this class is used to synch the hashmaps of the diferent multicast servers
-class ConnectServersMulti {
-    //Needs 2 TCP connections
+class Storage{
+    private  HashMap<String, HashSet<String>> searchIndex;
+    private  HashMap<String, HashSet<String>> referenceIndex;
+    public CopyOnWriteArrayList<String> linkList;
+    private CopyOnWriteArrayList<User> users;
+    private HandleFiles fileHandler;
+    private ServerConfig serverConfig;
+
+
+
+    public Storage(){
+        this.fileHandler = new HandleFiles();
+        this.searchIndex = new HashMap<String,HashSet<String>>();
+        this.referenceIndex =  new HashMap<String,HashSet<String>>();
+        this.linkList = new CopyOnWriteArrayList<>();
+        this.users = new CopyOnWriteArrayList<>();
+
+        fillInfo();
+
+    }
+    private void fillInfo(){
+        if(fileHandler.getReferenceIndex()!=null){
+            referenceIndex = fileHandler.getReferenceIndex();
+        }
+        if (fileHandler.getSearchIndex()!=null){
+            searchIndex = fileHandler.getSearchIndex();
+        }
+        if(fileHandler.readUsers()!=null){
+            users = fileHandler.readUsers();
+        }
+        if (fileHandler.readConfig()!=null){
+            serverConfig = fileHandler.readConfig();
+            System.out.println(serverConfig.getPort());
+            System.out.println(serverConfig.getAddress());
+        }
+    }
+
+    public synchronized void addLinkToQueue(String ws){
+        linkList.add(ws);
+        notify();
+    }
+
+    public void addWordToHash(String word, String ws){
+        if(searchIndex.get(word)!=null){
+            searchIndex.get(word).add(ws);
+
+        }else{
+            searchIndex.put(word, new HashSet<String>());
+            searchIndex.get(word).add(ws);
+        }
+    }
+
+    public void addReferenceToHash(String ws, String s){
+        if (referenceIndex.get(s) != null) {
+            referenceIndex.get(s).add(ws);
+        }else {
+            referenceIndex.put(s, new HashSet<String>());
+            referenceIndex.get(s).add(ws);
+        }
+    }
+
+    public HashMap<String, HashSet<String>> getSearchHash(){
+        return searchIndex;
+    }
+
+    public HashMap<String, HashSet<String>> getReferenceHash(){
+        return referenceIndex;
+    }
+
+    public CopyOnWriteArrayList<String> getLinkList(){
+        return linkList;
+    }
+
+    public synchronized String getLink(){
+        while(linkList.isEmpty()){
+            try{
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+        String ws = linkList.get(0);
+        linkList.remove(0);
+        return ws;
+    }
+
+    public ServerConfig getServerConfig(){
+        return serverConfig;
+    }
 }
-
-
 
 
 

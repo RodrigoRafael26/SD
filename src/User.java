@@ -1,17 +1,19 @@
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-class User {
+class User implements Serializable {
     private String username;
     private String password;
     private boolean isAdmin;
-    private ArrayList<String> searchHistory;
+    private CopyOnWriteArrayList<String> searchHistory;
     private int userID;
 
     User(String username, String password, boolean isAdmin, int userID) {
         this.username = username;
         this.password = password;
         this.isAdmin = isAdmin;
-        this.searchHistory = new ArrayList<>();
+        this.searchHistory = new CopyOnWriteArrayList<>();
         this.userID = userID;
     }
 
@@ -35,7 +37,7 @@ class User {
         this.searchHistory.add(url);
     }
 
-    public ArrayList<String> getSearchHistory (){
+    public CopyOnWriteArrayList<String> getSearchHistory (){
         return searchHistory;
     }
 }
