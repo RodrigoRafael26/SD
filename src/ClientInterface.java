@@ -1,8 +1,9 @@
-import java.rmi.*;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 public interface ClientInterface extends Remote {
 
-    public void printClient(String s) throws RemoteException;
-    public void changeUserToAdmin(boolean b) throws RemoteException;
-    public void ping() throws RemoteException;
+    public void notification(String message) throws RemoteException;
+    public String getUser() throws RemoteException;
+
 }

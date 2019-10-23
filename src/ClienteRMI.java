@@ -1,5 +1,4 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
@@ -10,40 +9,33 @@ import java.rmi.*;
 
 public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static Scanner sc = new Scanner(System.in);
-    private static User online;
-    private static int perk = 4;
-    private boolean isAdmin;
-    private int userID;
+    private static ServerInterface serverInterface;
+    private static ClientInterface clientInterface;
+    private static String user = null;
+    private static int perk = 0;
+    private static int PORT;
     private static String RMIhost;
     private static String myHost;
-    private static int PORT;
-    public static ServerInterface serverInterface;
-    public static ClientInterface clientInterface;
-    private static ClienteRMI client;
-    private static String user = null;
-    private static InputStreamReader in = new InputStreamReader(System.in);
-    private static BufferedReader reader = new BufferedReader(in);
+    private static String[] resposta_array = new String[10];
 
-    ClienteRMI() throws RemoteException {
-        super();
-    }
-
-    public void ping() {
-    }
-
-    private static void setPort(int port) {
-        PORT = port;
+    private ClienteRMI() throws RemoteException {
     }
 
     private static ServerInterface getRMI() throws RemoteException {
         return serverInterface;
     }
 
+    private static void setPort(int port) {
+        PORT = port;
+    }
+
     private static void setClientInterface() throws RemoteException {
         while (true) {
             try {
                 Registry registry = LocateRegistry.createRegistry(PORT);
-                registry.rebind(RMIhost, clientInterface);
+                registry.rebind("Benfica", clientInterface);
+                serverInterface.newClient(PORT, myHost);
+                break;
             } catch (ExportException e1) {
                 try {
                     UnicastRemoteObject.unexportObject(clientInterface, true);
@@ -54,18 +46,37 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    public String getUser() throws RemoteException {
+    public static void main(String args[]) throws IOException, NotBoundException, InterruptedException {
+        RMIhost = args[0];
+        myHost = args[1];
+
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            public void run() {
+                while(true) {
+                    try {
+                        if(user!=null)
+                            serverInterface.logout(user);
+                        break;
+                    } catch (RemoteException e) {
+                        retryRMIConnection();
+                    }
+                }
+            }
+        });
+        clientInterface = new ClienteRMI();
+        startsRMIConnection();
+        registoLoginMenu();
+        System.exit(1);
+    }
+
+    public String getUser() {
         return user;
     }
 
     private static void startsRMIConnection() {
         try {
             serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, PORT).lookup(RMIhost);
-        } catch (AccessException e) {
-            retryRMIConnection();
-        } catch (RemoteException e) {
-            retryRMIConnection();
-        } catch (NotBoundException e) {
+        } catch (RemoteException | NotBoundException e) {
             retryRMIConnection();
         }
     }
@@ -73,25 +84,18 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static void retryRMIConnection() {
         while (true) {
             try {
-//                Thread.sleep(1000);
-                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, PORT).lookup(RMIhost);
+                Thread.sleep(1000);
+                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
                 PORT = serverInterface.hello();
                 if (user != null)
                     setClientInterface();
                 break;
             } catch (RemoteException | NotBoundException e) {
                 System.out.println("........ not working .........");
+            }catch (InterruptedException e1) {
+                e1.printStackTrace();
             }
-
         }
-    }
-
-    public void printClient(String s) throws RemoteException {
-        System.out.println(s);
-    }
-
-    public void changeUserToAdmin(boolean isAdmin) {
-        online.changeUserToAdmin(true);
     }
 
     private static void registoLoginMenu() {
@@ -169,9 +173,9 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             else if (option == 3 && perk == 2)
                 verHistorico();
             else if (option == 4 && perk == 1)
-                tenMostImportant();
+                tenMost(4);
             else if (option == 5 && perk == 1)
-                tenMostSearched();
+                tenMost(5);
             else if (option == 6 && perk == 1)
                 givePrivileges();
             else
@@ -179,33 +183,19 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    private static void tenMostSearched() {
-        String[] resposta = new String[10];
-
-        while(resposta[0].length() == 0) {
+    private static void tenMost(int flag) {
+        while(resposta_array[0].length() == 0) {
             try {
-                resposta = serverInterface.tenMostImportant();
+                if(flag == 4)
+                    resposta_array = serverInterface.tenMostImportant();
+                else if(flag == 5)
+                    resposta_array = serverInterface.tenMostSearched();
             } catch (RemoteException e) {
                 retryRMIConnection();
             }
         }
-        for (int i = 0; i < resposta.length; i++) {
-            System.out.println(i + ") " + resposta[i]);
-        }
-    }
-
-    private static void tenMostImportant() {
-        String[] resposta = new String[10];
-
-        while (resposta[0].length() == 0) {
-            try {
-                resposta = serverInterface.tenMostImportant();
-            } catch (RemoteException e) {
-                retryRMIConnection();
-            }
-        }
-        for (int i = 0; i < resposta.length; i++) {
-            System.out.println(i + ") " + resposta[i]);
+        for (int i = 0; i < resposta_array.length; i++) {
+            System.out.println(i + ") " + resposta_array[i]);
         }
     }
 
@@ -377,36 +367,14 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             validation = stringChecker(username);
         }
 
-        try{
-            verifier = serverInterface.givePrivileges(online.getUsername(), username);
-            if (verifier) System.out.println("Permissions given to " + username);
-            else System.out.println("Could not give permissions to " + username);
-        } catch (RemoteException re) {
-            retryRMIConnection();
-        }
+        verifier = serverInterface.givePrivileges(user, username);
+        if (verifier) System.out.println("Permissions given to " + username);
+        else System.out.println("Could not give permissions to " + username);
         mainMenu();
     }
 
-    public static void main(String args[]) throws RemoteException {
-        RMIhost = args[0];
-        myHost = args[1];
-
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            public void run() {
-                while(true) {
-                    try {
-                        if(user!=null)
-                            serverInterface.logout(user);
-                        break;
-                    } catch (RemoteException e) {
-                        retryRMIConnection();
-                    }
-                }
-            }
-        });
-        clientInterface = new ClienteRMI();
-        startsRMIConnection();
-        registoLoginMenu();
-        System.exit(1);
+    public void notification (String message) throws RemoteException{
+        System.out.println("NOTIFICACAO");
+        System.out.println(message);
     }
 }
