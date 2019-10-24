@@ -8,6 +8,7 @@ class User implements Serializable {
     private String password;
     private boolean isAdmin;
     private CopyOnWriteArrayList<String> searchHistory;
+    private CopyOnWriteArrayList<String> notifications;
     private int userID;
 
     User(String username, String password, boolean isAdmin, int userID) {
@@ -15,7 +16,9 @@ class User implements Serializable {
         this.password = password;
         this.isAdmin = isAdmin;
         this.searchHistory = new CopyOnWriteArrayList<>();
+        this.notifications = new CopyOnWriteArrayList<>();
         this.userID = userID;
+
     }
 
     public boolean isAdmin() {
@@ -39,5 +42,13 @@ class User implements Serializable {
 
     public CopyOnWriteArrayList<String> getSearchHistory (){
         return searchHistory;
+    }
+
+    public CopyOnWriteArrayList<String> getNotifications (){
+        if(notifications.isEmpty()){
+            return null;
+        }else{
+            return notifications;
+        }
     }
 }

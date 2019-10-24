@@ -73,9 +73,6 @@ public class MulticastServer extends Thread{
                 System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
                 ManageRequests mr = new ManageRequests(st, s);
 
-
-
-
             }
 
 
@@ -88,6 +85,7 @@ public class MulticastServer extends Thread{
 
         }
 
+        //create thread to save state from time to time? or do it in keepAlive Thread
 
         //ManageRequests mr = new ManageRequests(st, "type | register ; username | admin ; password | worked");
         //TCP_Server tcp = new TCP_Server();
@@ -109,6 +107,7 @@ class Storage{
 
     private CopyOnWriteArrayList<User> users;
     private CopyOnWriteArrayList<String> responses;
+    private CopyOnWriteArrayList<User> onlineUsers;
 
     private CopyOnWriteArrayList<ServerConfig> onlineServers;
     private CopyOnWriteArrayList<String> linkList;
@@ -125,6 +124,7 @@ class Storage{
         this.searchIndex_changes = new ConcurrentHashMap<>();
         this.referenceIndex_changes = new ConcurrentHashMap<>();
         this.onlineServers = new CopyOnWriteArrayList<>();
+        this.onlineUsers = new CopyOnWriteArrayList<>();
         fillInfo();
 
     }
@@ -234,11 +234,26 @@ class Storage{
         return serverConfig;
     }
 
+    public CopyOnWriteArrayList<User> getOnlineUsers(){
+        return onlineUsers;
+    }
+
+    public void disconnectUser(String username){
+        for(User u : onlineUsers){
+            if(u.getUsername().equals(username)){
+                onlineUsers.remove(u);
+            }
+        }
+    }
+
+    public CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
+        return onlineServers;
+    }
     public void updateFiles(){
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
         fileHandler.writeUsers(users);
-
+        fileHandler.writeUndeliveredMessages(responses);
     }
 }
 
