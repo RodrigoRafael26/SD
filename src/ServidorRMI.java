@@ -15,7 +15,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     int replyServer = 0;
     private static ServerInterface serverInterface;
     private String MULTICAST_ADDRESS = "224.0.224.0";
-    private int PORT = 4323;
+    private int PORT = 4320;
     private String name = "RMIServer";
     private CopyOnWriteArrayList<ClientInterface> clientsList = new CopyOnWriteArrayList<>();
     private int clientPort = 7000;
@@ -109,7 +109,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private String dealWithRequest(String request) {
         MulticastSocket socket = null;
         String tipo_request = request.split(" ; ")[0].split(" | ")[1];
-        request = setReplyServer(request, tipo_request);
+        //request = setReplyServer(request, tipo_request);
         String message = "type | " + tipo_request + " ; operation | failed";
         int count = 0;
 
@@ -126,10 +126,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.send(packet);
 
                 try {
-                    Thread.sleep(1000);
+                   Thread.sleep(1000);
                 } catch (InterruptedException e) {}
 
                 buffer = request.getBytes();
+                //buffer = request.getBytes();
+                System.out.println(request);
                 packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
                 System.out.println("Sent to multicast address: " + request);
@@ -199,7 +201,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public int register(String username, String password) throws RemoteException {
+        System.out.println("RECEBI WRL");
         request = "type | register ; username | " + username + " ; password | " + password;
+        System.out.println(request + "!!!!!!");
         String resposta = dealWithRequest(request);
 
         if(resposta.equals("type | status ; operation | failed"))

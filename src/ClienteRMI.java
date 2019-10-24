@@ -85,7 +85,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             try {
                 Thread.sleep(1000);
-                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Benfica");
+                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
                 PORT = serverInterface.hello();
                 if (user != null)
                     setClientInterface();

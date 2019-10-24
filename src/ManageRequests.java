@@ -5,6 +5,9 @@ public class ManageRequests extends Thread{
     private Storage server_Storage;
     private String request;
     private String response;
+    private int response_port;
+    private String responseAddress;
+
     public ManageRequests(Storage st, String request){
         this.server_Storage = st;
         this.request = request;
@@ -18,7 +21,7 @@ public class ManageRequests extends Thread{
         //System.out.println(parameters);
 
         String[] data = parameters.split(" ; ");
-
+        //send ack packet
         switch (type){
             case "register":
                 //parse the request

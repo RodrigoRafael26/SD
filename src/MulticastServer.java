@@ -44,7 +44,7 @@ public class MulticastServer extends Thread{
     public void run(){
 
         //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
-        WebCrawler wc = new WebCrawler(st);
+//        WebCrawler wc = new WebCrawler(st);
         //st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
 
         MulticastSocket socket = null;
@@ -52,25 +52,28 @@ public class MulticastServer extends Thread{
             socket = new MulticastSocket(port);
             InetAddress group = InetAddress.getByName(multicast_address);
             socket.joinGroup(group);
+            socket.setLoopbackMode(false);
 
             while(true){
                 byte[] socketBuffer = new byte[8];
-                DatagramPacket request = new DatagramPacket(socketBuffer, socketBuffer.length);
-                socket.receive(request);
+                DatagramPacket packet = new DatagramPacket(socketBuffer, socketBuffer.length);
+                socket.receive(packet);
 
-                byte[] data = request.getData();
+                String message = new String(packet.getData(), 0, packet.getLength());
+                int length = Integer.parseInt(message.trim());
+                socketBuffer = new byte[length];
+                packet = new DatagramPacket(socketBuffer, length);
+                socket.receive(packet);
+
+                byte[] data = packet.getData();
                 String s = new String(data,0,data.length);
+                System.out.println(s);
 
                 //chamar manage requests aqui
-                System.out.println("Port " + request.getPort() + " on " + request.getAddress() +" sent this message:" + s);
-
-                String r = "Ligacao estabelecida";
-                byte[] bufSend = r.getBytes();
+                System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
+                ManageRequests mr = new ManageRequests(st, s);
 
 
-                DatagramPacket response = new DatagramPacket(bufSend, bufSend.length, request.getAddress(), request.getPort());
-
-                socket.send(response);
 
 
             }
