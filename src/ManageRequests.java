@@ -1,3 +1,7 @@
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -17,6 +21,7 @@ public class ManageRequests extends Thread{
 
     public void run(){
         String type = request.substring(7).split(" ; ")[0];
+
         String parameters = request.replace("type | "+ type + " ; ","");
         //System.out.println(parameters);
 
@@ -31,6 +36,7 @@ public class ManageRequests extends Thread{
 
                 //create user
                 //System.out.println(username + "||"+password);
+                //do not allow duplicate users
                 boolean isAdmin;
                 int id;
                 if(server_Storage.getUserList().isEmpty()) {
@@ -46,6 +52,7 @@ public class ManageRequests extends Thread{
                 //add user to list
                 server_Storage.addUser(u);
                 break;
+
             case "login":
 
                 username = data[0].replace("username | ","");
@@ -53,22 +60,18 @@ public class ManageRequests extends Thread{
 
                 //check if user is registered and confirm passowrd
                 if(server_Storage.getUser(username) !=null){
+                    User user = server_Storage.getUser(username);
+                    if(user.getUsername().compareTo(username) == 0 && user.getPassword().compareTo(password)==0){
 
-                    if(server_Storage.getUser(username).getUsername().compareTo(username) == 0 && server_Storage.getUser(username).getPassword().compareTo(password)==0){
-
-                        //if information checks send notification
-
-                    }else{
-
-                        //send message saying wrong login info
+                        String resp = "type | status ; operation | success";
 
                     }
                 }else{
 
                     //send message saying user doesnt exist
+                    String resp = "type | status ; operation | failed";
+                    this.response = resp;
                 }
-
-                //check if user has undelivered messages if so send them
 
                 break;
 
@@ -78,25 +81,42 @@ public class ManageRequests extends Thread{
                 server_Storage.getUser(username).getSearchHistory();
 
                 //send message with all information
+                String resp = "type | historico ; ";
+                u = server_Storage.getUser(username);
+                for(String temp : u.getSearchHistory()){
+                    resp += "item_name | "+ temp + " ; ";
+                }
+
+                this.response = resp;
+
                 break;
 
             case "url_references":
                 String find_url = data[0].replace("url | ", "");
-                response="";
                 //go to hashmap to find the url
                 if(server_Storage.getReferenceHash().get(find_url)!=null){
+                    response="type | url_references ; ";
                     for (String url : server_Storage.getReferenceHash().get(find_url)) {
-                        response += url +" ; ";
+                        response +="item_name | " + url +" ; ";
                     }
 
                 }else{
                     //send message saying the URL doesnt exist
+                    response = "type | status ; operation | failed";
                 }
 
                 break;
 
             case "add_URL":
-                //falta esta opcao no rmi server
+                String newUrl = data[0].replace("url | ", "");
+
+                //add link to queue
+                server_Storage.addLinkToQueue(newUrl);
+
+                response = "type | status ; operation | success";
+
+                response = "type | status ; operation | failed";
+
                 break;
 
             case "search":
@@ -117,14 +137,26 @@ public class ManageRequests extends Thread{
                     searchResults = merged;
                 }
                 //order search
+
+
                 //convert search results to string and send response
+                resp = "type | search ; item_count | "+ searchResults.size() + " ; ";
+                String title = "";
+                String citation = "";
+                for(String temp : searchResults){
+                    try{
+                        Document doc = Jsoup.connect(temp).get();
+                        title = doc.title();
+                        citation = doc.text().substring(0,20);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                    resp += "item_name | "+temp+ " ; "+ "title | "+ title + " ; "+ "citation | "+ citation + " ; ";
+                }
+                this.response = resp;
 
-                //need to find a way to show pages info
                 break;
 
-            case "status":
-                //nao sei bem o que por aqui
-                break;
 
             case "give_privilege":
                 username = data[0].replace("username | ", "");
@@ -134,33 +166,60 @@ public class ManageRequests extends Thread{
                     //change access privilege
                     server_Storage.getUser(username).changeUserToAdmin();
                     //send message to admin saying operation successful
-                    //send notification to user saying he is now an admin
 
+                    //send notification to user saying he is now an admin
+                    resp = "type | status ; operation | failed";
                 }else{
                     //send message saying user doesnt exist
+                    resp = "type | status ; operation | failed";
                 }
+                this.response = resp;
 
                 break;
 
             case "logout":
-                //nao sei o que e suposto fazer no logout aqui
+                username = data[0].replace("username | ", "");
+                server_Storage.disconnectUser(username);
+                resp = "type | status ; operation | success";
+                this.response = resp;
                 break;
 
             case "10MostImportant":
-                //faz parte do status
+
                 break;
 
             case "10MostSearched":
-                //faz parte do status
+
+                break;
+
+            case "newURL":
+
                 break;
 
             case "get_notifications":
-                //pode ser feito no login acho
+                //check if user has undelivered messages
+                username = data[0].replace("username | ", "");
+                User user = server_Storage.getUser(username);
+
+                String notifications = "type | notifications ; ";
+                for(String temp : user.getNotifications() ){
+                    notifications += "item_name | "+ temp + " ; ";
+                }
+
+                //if information checks send notification
+                this.response = notifications;
                 break;
+
             case "keepAlive":
                 //save online servers
                 break;
-            case "getOnlineServers":
+            case "getOnlineServer":
+                //this is for RMI server
+                resp = "type | getOnlineServer ; ";
+
+                for (ServerConfig s : server_Storage.getOnlineServers()){
+                    resp += "item_id | " + s.getServer_ID() + " ; workload | " + s.getWorkload() + " ; ";
+                }
                 break;
             default:
         }

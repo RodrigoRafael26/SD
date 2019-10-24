@@ -14,11 +14,7 @@ import java.util.*;
 
 
 public class WebCrawler extends Thread{
-    //public HashMap<String, HashSet<String>> searchIndex;
-    //public HashMap<String, HashSet<String>> referenceIndex;
     public Storage st;
-    private ArrayList<String> indexedUrls;
-
 
     public WebCrawler(Storage st){
         this.st = st;
@@ -29,7 +25,6 @@ public class WebCrawler extends Thread{
     public void run(){
 
         this.indexLinks();
-
     }
 
 

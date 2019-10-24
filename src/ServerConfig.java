@@ -32,4 +32,7 @@ public class ServerConfig implements Serializable {
     public void updateWorkload(int numLinks){
         this.workload = numLinks;
     }
+    public int getWorkload(){
+        return workload;
+    }
 }
