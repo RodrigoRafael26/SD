@@ -139,7 +139,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             // user sem login
             System.out.println("\t\tMAIN MENU\n");
             System.out.println("\n\t1Pesquisa");
-            if (perk == 2) { //user normal
+            if (perk <= 2) { //user normal
                 System.out.println("\n\t2)Consulta da lista de páginas com ligacao para uma página especifica");
                 System.out.println("\n\t3)Histórico");
             }
@@ -322,6 +322,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                         verifier = serverInterface.register(username, password);
                     else
                         verifier = serverInterface.login(username, password);
+                    System.out.println(verifier);
                     break;
                 } catch (RemoteException e) {
                     retryRMIConnection();

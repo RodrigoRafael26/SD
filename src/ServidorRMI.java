@@ -96,8 +96,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public String newURL(String url) throws RemoteException {
-        request = "type | newURL ; url | " + url;
+        request = "type | getOnlineServer";
         String answer = dealWithRequest(request);
+
+
+
+        request = "type | newURL ; url | " + url + " ; id_server | " /*+ id_server*/;
+        answer = dealWithRequest(request);
         return answer.split(" ; ")[1].split(" | ")[1];
     }
 
@@ -108,13 +113,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     private String dealWithRequest(String request) {
         MulticastSocket socket = null;
-        String tipo_request = request.split(" ; ")[0].split(" | ")[1];
-        //request = setReplyServer(request, tipo_request);
+        String tipo_request = request.split(" ; ")[0].split(" \\| ")[1];
         String message = "type | " + tipo_request + " ; operation | failed";
         int count = 0;
 
         while(count < 6){
             try {
+                System.out.println("Sou cona :3");
                 socket = new MulticastSocket(PORT);
                 InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                 socket.joinGroup(group);
@@ -165,27 +170,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return message;
     }
 
-    String setReplyServer(String request, String tipo_request) {
-        int counter = 0, counter2 = 0;
-
-        while (!this.servers[replyServer]) {
-            if(counter++ == 3){
-                try {
-                    Thread.sleep(5000);
-                    if (++counter2 > 6) {
-                        return "type | " + tipo_request + " ; operation | failed";
-                    }
-                }catch (InterruptedException e){}
-                counter = 0;
-            }
-            replyServer++;
-            replyServer = replyServer % 3;
-        }
-        request = "server | " + (replyServer++ + 1) + " ; " + request;
-        replyServer = replyServer % 3;
-        return request;
-    }
-
     public boolean logout(String user) throws java.rmi.RemoteException {
         request = "type | logout ; username | " + user;
         dealWithRequest(request);
@@ -201,7 +185,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public int register(String username, String password) throws RemoteException {
-        System.out.println("RECEBI WRL");
         request = "type | register ; username | " + username + " ; password | " + password;
         System.out.println(request + "!!!!!!");
         String resposta = dealWithRequest(request);
@@ -219,13 +202,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     public int login(String username, String password) throws RemoteException {
         request = "type | login ; username | " + username + " ; password | " + password;
-//        String ans = dealWithRequest(request);
-//
-//        String tokens[] = ans.split(" ; ");
-//        String mes[][] = new String[tokens.length][];
-//        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
-//        return Integer.parseInt(mes[2][1]);
-        return 1;
+        String ans = dealWithRequest(request);
+
+        String tokens[] = ans.split(" ; ");
+        String mes[][] = new String[tokens.length][];
+        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
+        return Integer.parseInt(mes[2][1]);
     }
 
     public String historic(String user) throws RemoteException {
@@ -269,7 +251,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
         String tokens[] = resposta.split(" ; ");
         String mes[][] = new String[tokens.length][];
-        for(int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
+        for(int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" \\| ");
         for(i = 0; i < tokens.length; i++) respostaList[i] = mes[i][1];
 
         return respostaList;
@@ -284,12 +266,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         String[] splitted = resposta.split(" ; ");
-        return splitted[2].split(" | ")[1];
+        return splitted[2].split(" \\| ")[1];
     }
 
     public void newClient(int port, String myHost) throws RemoteException {
         ClientInterface client;
-        System.out.println("port: " + port + " | clientIP: " + myHost);
+        System.out.println("port: " + port + " \\| clientIP: " + myHost);
 
         while (true) {
             try {
@@ -309,7 +291,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String resposta = dealWithRequest("type | get_notifications ; username | " + client.getUser());
         String tokens[] = resposta.split(" ; ");
         String mes[][] = new String[tokens.length][];
-        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
+        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" \\| ");
 
         int counter = Integer.parseInt(mes[1][1]);
         if(counter > 0){
@@ -353,7 +335,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
         return false;
     }
-
 }
 
 
@@ -384,8 +365,8 @@ class MulticastConnection extends Thread {
                     System.out.println(message);
                     String[] aux = message.split(" ; ");
                     String[][] info = new String[2][];
-                    info[0] = aux[0].split(" | ");
-                    info[1] = aux[1].split(" | ");
+                    info[0] = aux[0].split(" \\| ");
+                    info[1] = aux[1].split(" \\| ");
                     serverNumber = Integer.parseInt(info[1][0].trim());
                     currentRequest = Integer.parseInt(info[1][1].trim());
                     if ((serverRmi.getServers()[serverNumber-1]) && this.servers[serverNumber-1] < 28){
@@ -394,7 +375,7 @@ class MulticastConnection extends Thread {
                     if (!serverRmi.getServers()[serverNumber - 1]) {
                         if(serverCounter++ > 0){
                             String request = "type | config ; currentRequest | " + currentRequest;
-                            request = serverRmi.setReplyServer(request, "config");
+//                            request = serverRmi.setReplyServer(request, "config");
                             MulticastSocket multicastSocket = null;
                             try{
                                 multicastSocket = new MulticastSocket();
