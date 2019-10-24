@@ -114,12 +114,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private String dealWithRequest(String request) {
         MulticastSocket socket = null;
         String tipo_request = request.split(" ; ")[0].split(" \\| ")[1];
-        String message = "type | " + tipo_request + " ; operation | failed";
+        //String message = "type | " + tipo_request + " ; operation | failed";
+        String message = "";
         int count = 0;
 
         while(count < 6){
             try {
-                System.out.println("Sou cona :3");
                 socket = new MulticastSocket(PORT);
                 InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                 socket.joinGroup(group);
@@ -136,10 +136,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
                 buffer = request.getBytes();
                 //buffer = request.getBytes();
-                System.out.println(request);
                 packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
-                System.out.println("Sent to multicast address: " + request);
+//                System.out.println("Sent to multicast address: " + request);
 
                 buffer = new byte[8];
                 packet = new DatagramPacket(buffer, buffer.length);
@@ -151,10 +150,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 message = new String(packet.getData(), 0, packet.getLength());
                 int bufferLength = Integer.parseInt(message.trim());
                 buffer = new byte[bufferLength];
-                packet = new DatagramPacket(buffer, bufferLength);
+                packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
+
+                //System.out.println( packet.getData().length);
+//                System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
                 break;
             } catch (SocketTimeoutException e) {
                 if(count++ < 0) {
@@ -186,17 +186,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     public int register(String username, String password) throws RemoteException {
         request = "type | register ; username | " + username + " ; password | " + password;
-        System.out.println(request + "!!!!!!");
         String resposta = dealWithRequest(request);
-
-        if(resposta.equals("type | status ; operation | failed"))
+        System.out.println(resposta);
+        if(resposta.equals("type | register ; operation | failed"))
             return 4;
 
-        String tokens[] = resposta.split(" ; ");
-        String info[][] = new String[tokens.length][];
-        for(int i = 0; i < tokens.length; i++) info[i] = tokens[i].split(" | ");
-        int ret = Integer.parseInt(info[2][1]);
-        if (ret == 1) return 1;
+        if (Integer.parseInt(resposta) == 1) return 1;
         else return 3;
     }
 
@@ -271,7 +266,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     public void newClient(int port, String myHost) throws RemoteException {
         ClientInterface client;
-        System.out.println("port: " + port + " \\| clientIP: " + myHost);
+        System.out.println("port: " + port + " | clientIP: " + myHost);
 
         while (true) {
             try {
@@ -289,6 +284,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         System.out.println(client.getUser() + " na lista de clientes");
         clientsList.add(client);
         String resposta = dealWithRequest("type | get_notifications ; username | " + client.getUser());
+        System.out.println(resposta + "AQUI");
         String tokens[] = resposta.split(" ; ");
         String mes[][] = new String[tokens.length][];
         for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" \\| ");
@@ -353,7 +349,7 @@ class MulticastConnection extends Thread {
         DatagramSocket socket = null;
         try {
             int currentRequest, serverNumber;
-            socket = new DatagramSocket(++PORT);
+            socket = new DatagramSocket(PORT);
             byte[] buffer = new byte[32];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
@@ -361,6 +357,7 @@ class MulticastConnection extends Thread {
                 try {
                     socket.setSoTimeout(1000);
                     socket.receive(packet);
+                    System.out.println("asdasd");
                     String message = new String(packet.getData(), 0, packet.getLength());
                     System.out.println(message);
                     String[] aux = message.split(" ; ");
@@ -382,7 +379,7 @@ class MulticastConnection extends Thread {
                                 InetAddress address = InetAddress.getByName("224.0.224.0");
                                 String length = request.length() + "";
                                 buffer = length.getBytes();
-                                packet = new DatagramPacket(buffer, buffer.length, address, 4323);
+                                packet = new DatagramPacket(buffer, buffer.length, address, 4320);
                                 multicastSocket.send(packet);
                                 try{
                                     Thread.sleep(100);

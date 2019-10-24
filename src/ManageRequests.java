@@ -2,6 +2,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -9,12 +10,16 @@ public class ManageRequests extends Thread{
     private Storage server_Storage;
     private String request;
     private String response;
+    private InetAddress group;
     private int response_port;
     private String responseAddress;
 
-    public ManageRequests(Storage st, String request){
+    public ManageRequests(Storage st, String request, InetAddress group/*, int port, String address*/){
         this.server_Storage = st;
         this.request = request;
+//        this.response_port = port;
+//        this.responseAddress = address;
+        this.group = group;
         this.start();
     };
 
@@ -47,10 +52,14 @@ public class ManageRequests extends Thread{
                     id = server_Storage.getUserList().size() +1;
                 }
 
+                response = "1";
+
                 User u = new User(username, password, isAdmin, id);
 
                 //add user to list
+
                 server_Storage.addUser(u);
+                System.out.println("user added");
                 break;
 
             case "login":
@@ -202,8 +211,11 @@ public class ManageRequests extends Thread{
                 User user = server_Storage.getUser(username);
 
                 String notifications = "type | notifications ; ";
-                for(String temp : user.getNotifications() ){
-                    notifications += "item_name | "+ temp + " ; ";
+                if(user.getNotifications()!=null){
+
+                    for(String temp : user.getNotifications() ){
+                        notifications += "item_name | "+ temp + " ; ";
+                    }
                 }
 
                 //if information checks send notification
@@ -222,6 +234,37 @@ public class ManageRequests extends Thread{
                 }
                 break;
             default:
+        }
+
+        String resp_address = "224.0.224.0";
+        int resp_port = 4324;
+        MulticastSocket resp_socket = null;
+        try{
+            resp_socket = new MulticastSocket();
+            group = InetAddress.getByName("224.0.224.0");
+
+            //send buffer length
+            String length = "" + response.length();
+            byte[] buffer = length.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
+            resp_socket.send(packet);
+
+            //send response
+            packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
+            try{
+                Thread.sleep(100);
+            }catch (InterruptedException e){}
+            resp_socket.send(packet);
+
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            resp_socket.close();
         }
 
     }

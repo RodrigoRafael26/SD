@@ -11,7 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.FileHandler;
 
 public class MulticastServer extends Thread{
-    private String multicast_address;
+    private String multicast_address ;
     private int port;
     private int server_id;
     private long SLEEP_TIME = 5000;
@@ -70,8 +70,8 @@ public class MulticastServer extends Thread{
                 System.out.println(s);
 
                 //chamar manage requests aqui
-                System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
-                ManageRequests mr = new ManageRequests(st, s);
+                //System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
+                ManageRequests mr = new ManageRequests(st, s, group);
 
             }
 
