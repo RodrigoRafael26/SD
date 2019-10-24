@@ -1,3 +1,4 @@
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -32,7 +33,6 @@ class User implements Serializable {
     public String getPassword() {
         return password;
     }
-
     public void addToHist(String searchTerm){
         this.searchHistory.add(searchTerm);
     }
