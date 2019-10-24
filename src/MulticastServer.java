@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.FileHandler;
 
@@ -45,9 +46,7 @@ public class MulticastServer extends Thread{
         //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
         WebCrawler wc = new WebCrawler(st);
         st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
-        ManageRequests mr = new ManageRequests(st);
 
-        //tem de mandar as configs do socket TCP por multicast
 
         /*
         MulticastSocket socket = null;
@@ -86,27 +85,37 @@ public class MulticastServer extends Thread{
             socket.close();
         }*/
 
+
+        //ManageRequests mr = new ManageRequests(st, "type | register ; username | admin ; password | worked");
+        //TCP_Server tcp = new TCP_Server();
+        //TCP_Client client = new TCP_Client("localhost");
+        //tem de mandar as configs do socket TCP por multicast
     }
 
 }
 
 class Storage{
-    private  HashMap<String, HashSet<String>> searchIndex;
-    private  HashMap<String, HashSet<String>> referenceIndex;
-    public CopyOnWriteArrayList<String> linkList;
+    private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchIndex;
+    private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceIndex;
+    private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchIndex_changes;
+    private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceIndex_changes;
+
     private CopyOnWriteArrayList<User> users;
+    //create response list?
+
+    public CopyOnWriteArrayList<String> linkList;
     private HandleFiles fileHandler;
     private ServerConfig serverConfig;
 
 
-
     public Storage(){
         this.fileHandler = new HandleFiles();
-        this.searchIndex = new HashMap<String,HashSet<String>>();
-        this.referenceIndex =  new HashMap<String,HashSet<String>>();
+        this.searchIndex = new ConcurrentHashMap<>();
+        this.referenceIndex =  new ConcurrentHashMap<>();
         this.linkList = new CopyOnWriteArrayList<>();
         this.users = new CopyOnWriteArrayList<>();
-
+        this.searchIndex_changes = new ConcurrentHashMap<>();
+        this.referenceIndex_changes = new ConcurrentHashMap<>();
         fillInfo();
 
     }
@@ -132,35 +141,69 @@ class Storage{
         notify();
     }
 
+    // add a word to hashmap
     public void addWordToHash(String word, String ws){
+        //if the word already exists
         if(searchIndex.get(word)!=null){
-            searchIndex.get(word).add(ws);
+            //if the ws is not in word index add it
+            if(!searchIndex.get(word).contains(ws)){
+                //if this word doesnt exist in changes add it
+                if(searchIndex_changes.get(word) == null){
+                    searchIndex_changes.put(word, new CopyOnWriteArrayList<>());
+                }
 
-        }else{
-            searchIndex.put(word, new HashSet<String>());
+                //add ws to search hash and changes hash
+                searchIndex.get(word).add(ws);
+                searchIndex_changes.get(word).add(ws);
+            }
+
+        }else{//if the word doesnt exist create a key in both hashmaps (search and changes)
+            searchIndex.put(word, new CopyOnWriteArrayList<>());
+            searchIndex_changes.put(word, new CopyOnWriteArrayList<>());
             searchIndex.get(word).add(ws);
+            searchIndex_changes.get(word).add(ws);
         }
     }
 
     public void addReferenceToHash(String ws, String s){
         if (referenceIndex.get(s) != null) {
-            referenceIndex.get(s).add(ws);
+            if(!referenceIndex.get(s).contains(ws)){
+
+                referenceIndex.get(s).add(ws);
+            }
         }else {
-            referenceIndex.put(s, new HashSet<String>());
+            referenceIndex.put(s, new CopyOnWriteArrayList<>());
             referenceIndex.get(s).add(ws);
         }
     }
 
-    public HashMap<String, HashSet<String>> getSearchHash(){
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getSearchHash(){
         return searchIndex;
     }
 
-    public HashMap<String, HashSet<String>> getReferenceHash(){
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getReferenceHash(){
         return referenceIndex;
     }
 
     public CopyOnWriteArrayList<String> getLinkList(){
         return linkList;
+    }
+
+    public void addUser(User user){
+        users.add(user);
+    }
+
+    public User getUser(String username){
+        for(User user : users){
+            if(user.getUsername().compareTo(username) == 0){
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public CopyOnWriteArrayList<User> getUserList() {
+        return users;
     }
 
     public synchronized String getLink(){
@@ -174,11 +217,19 @@ class Storage{
         }
         String ws = linkList.get(0);
         linkList.remove(0);
+        System.out.println("removed");
         return ws;
     }
 
     public ServerConfig getServerConfig(){
         return serverConfig;
+    }
+
+    public void updateFiles(){
+        fileHandler.writeReferenceIndex(referenceIndex);
+        fileHandler.writeSearchIndex(searchIndex);
+        fileHandler.writeUsers(users);
+
     }
 }
 

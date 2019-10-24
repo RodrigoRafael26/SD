@@ -21,8 +21,8 @@ class User implements Serializable {
         return isAdmin;
     }
 
-    public void changeUserToAdmin(boolean isAdmin) {
-        this.isAdmin = isAdmin;
+    public void changeUserToAdmin() {
+        this.isAdmin = true;
     }
 
     public String getUsername() {
@@ -33,8 +33,8 @@ class User implements Serializable {
         return password;
     }
 
-    public void addToHist(String url){
-        this.searchHistory.add(url);
+    public void addToHist(String searchTerm){
+        this.searchHistory.add(searchTerm);
     }
 
     public CopyOnWriteArrayList<String> getSearchHistory (){

@@ -4,7 +4,6 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import sun.security.validator.ValidatorException;
 
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -12,19 +11,16 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
+
 
 public class WebCrawler extends Thread{
     //public HashMap<String, HashSet<String>> searchIndex;
     //public HashMap<String, HashSet<String>> referenceIndex;
     public Storage st;
-    private int numURL;
     private ArrayList<String> indexedUrls;
 
 
     public WebCrawler(Storage st){
-        this.numURL = 0;
         this.st = st;
         this.start();
     }
@@ -39,8 +35,6 @@ public class WebCrawler extends Thread{
 
     //A função indexLinks vai ser iterativa
     private void indexLinks() {
-
-        while(this.numURL <3000){
 
             try {
                 String ws = st.getLink();
@@ -67,19 +61,17 @@ public class WebCrawler extends Thread{
 
                     //index links
                     String s = link.attr("href");
-                    //System.out.println(s);
+
 
                     st.addReferenceToHash(ws, s);
 
                     //Add links to a queue
                     st.addLinkToQueue(s);
 
-                    System.out.println(s + " is indexed " + numURL);
 
                     // Get website text
-                    String text = doc.text(); // We can use doc.body().text() if we only want to get text from <body></body>
+                    String text = doc.text();
                     indexWords(text, ws);
-                    this.numURL++;
 
                 }
 
@@ -87,18 +79,19 @@ public class WebCrawler extends Thread{
 
 
             } catch (UnsupportedMimeTypeException e){
-                continue;
+
+                //remove link from reference index (vai criar problemas com a partilha de urls)
+                indexLinks();
             } catch (HttpStatusException e){
-                continue;
+                //remove link from reference index (vai criar problemas com a partilha de urls)
+                System.out.println("404");
+                indexLinks();
             } catch (IOException e) {
+                indexLinks();
                 e.printStackTrace();
             }
-
-        }
-        st.linkList.clear();
-        this.numURL = 0;
-        System.out.println(st.getReferenceHash());
-        System.out.println(st.getSearchHash());
+            indexLinks();
+        System.out.println(st.getLinkList().size());
     }
 
 

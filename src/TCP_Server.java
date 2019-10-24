@@ -7,7 +7,9 @@ import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TCP_Server {
-    public TCP_Server(){
+    Storage st;
+    public TCP_Server(Storage st){
+        this.st = st;
         try{
             int serverPort = 6000;
 
@@ -21,8 +23,9 @@ public class TCP_Server {
                 new Connection(clientSocket, socketList);
 
             }
-        }catch(IOException e)
-        {System.out.println("Listen:" + e.getMessage());}
+        }catch(IOException e) {
+            System.out.println("Listen:" + e.getMessage());
+        }
     }
 
 }
@@ -46,12 +49,16 @@ class Connection extends Thread{
     }
     //=============================
     public void run(){
+
+        //it wont send a response only deal with new information
         String resposta;
         try{
             while(true){
                 //an echo server
                 String data = in.readUTF();
                 System.out.println("T["+ thread_number + "] Recebeu: "+data);
+
+                //mudar a resposta
                 resposta=data.toUpperCase();
                 int i = 0;
                 for (Socket clientSocket: socketList) {
@@ -62,7 +69,10 @@ class Connection extends Thread{
 
 
             }
-        }catch(EOFException e){System.out.println("EOF:" + e);
-        }catch(IOException e){System.out.println("IO:" + e);}
+        }catch(EOFException e){
+            System.out.println("EOF:" + e);
+        }catch(IOException e){
+            System.out.println("IO:" + e);
+        }
     }
 }

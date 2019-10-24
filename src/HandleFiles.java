@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class HandleFiles{
@@ -33,7 +34,7 @@ public class HandleFiles{
         return userList;
     }
 
-    public void writeUsers(ArrayList<User> usersList){
+    public void writeUsers(CopyOnWriteArrayList<User> usersList){
         File f = new File("Users");
 
         try{
@@ -48,7 +49,7 @@ public class HandleFiles{
         }
     }
 
-    public  void writeReferenceIndex(HashMap<String, HashSet<String>> referenceMap){
+    public void writeReferenceIndex(ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceMap){
         File f = new File("ReferenceIndex");
 
         try{
@@ -64,13 +65,13 @@ public class HandleFiles{
 
     }
 
-    public HashMap<String, HashSet<String>> getReferenceIndex(){
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getReferenceIndex(){
         File f = new File("ReferenceIndex");
-        HashMap<String, HashSet<String>> referenceMap = null;
+        ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceMap = null;
         try {
             FileInputStream fos = new FileInputStream(f);
             ObjectInputStream ois = new ObjectInputStream(fos);
-            referenceMap = (HashMap<String, HashSet<String>>) ois.readObject();
+            referenceMap = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) ois.readObject();
             ois.close();
 
         } catch (FileNotFoundException e) {
@@ -87,7 +88,7 @@ public class HandleFiles{
         return referenceMap;
     }
 
-    public  void writeSearchIndex(HashMap<String, HashSet<String>> searchMap){
+    public  void writeSearchIndex(ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchMap){
         File f = new File("SearchIndex");
 
         try{
@@ -102,13 +103,13 @@ public class HandleFiles{
         }
     }
 
-    public HashMap<String, HashSet<String>> getSearchIndex(){
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getSearchIndex(){
         File f = new File("SearchIndex");
-        HashMap<String, HashSet<String>> searchMap = null;
+        ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchMap = null;
         try {
             FileInputStream fos = new FileInputStream(f);
             ObjectInputStream ois = new ObjectInputStream(fos);
-            searchMap = (HashMap<String, HashSet<String>>) ois.readObject();
+            searchMap = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) ois.readObject();
             ois.close();
 
         } catch (FileNotFoundException e) {
@@ -149,7 +150,7 @@ public class HandleFiles{
         }
         port = Integer.parseInt(st[0]);
         multicast_address = st[1];
-        serverID = Integer.parseInt(st[2]);
+        serverID = Integer.parseInt(st[2]); //talvez mude isto para ser passado em parametro
 
         ServerConfig s = new ServerConfig(port,multicast_address,serverID);
         return s;
@@ -157,6 +158,7 @@ public class HandleFiles{
 
     //escrever funcoes para ler e escrever o array de links a indexar
 
+    //Write and read undelivered messages
 
 
 

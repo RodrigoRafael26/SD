@@ -3,14 +3,14 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class TCP_Client {
-    String hostname;
-    public TCP_Client (String hostname) {
-        this.hostname = hostname;
+    String host;
+    public TCP_Client (String address, int port) {
+        this.host = address;
         Socket s = null;
-        int serversocket = 6000;
+        int serversocket = port;
         try {
             // 1o passo
-            s = new Socket(hostname,serversocket);
+            s = new Socket(host,serversocket);
 
             System.out.println("SOCKET=" + s);
             // 2o passo
@@ -65,7 +65,7 @@ class ReadAnswer extends Thread{
         this.start();
     }
 
-
+    //alterar para esta funcao poder atualizar os dados dos hash maps e das
     public void run(){
 
         // READ FROM SOCKET
