@@ -17,4 +17,5 @@ public interface ServerInterface extends Remote {
     public String searchWeb(String keyword) throws java.rmi.RemoteException;
     public void newClient(int port, String myHost) throws java.rmi.RemoteException;
     public void ping() throws java.rmi.RemoteException;
+    public String newURL(String url) throws java.rmi.RemoteException;
 }

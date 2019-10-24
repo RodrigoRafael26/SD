@@ -85,15 +85,15 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             try {
                 Thread.sleep(1000);
-                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
+                serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Benfica");
                 PORT = serverInterface.hello();
                 if (user != null)
                     setClientInterface();
                 break;
-            } catch (RemoteException | NotBoundException e) {
-                System.out.println("........ not working .........");
-            }catch (InterruptedException e1) {
+            } catch (InterruptedException e1) {
                 e1.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("........ not working .........");
             }
         }
     }
@@ -147,6 +147,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 System.out.println("\n\t4) 10 paginas mais importantes");
                 System.out.println("\n\t5) 10 pesquisas mais realizadas");
                 System.out.println("\n\t6) Dar privilegios de admin");
+                System.out.println("\n\t7) Novo URL");
             }
             System.out.println("\n\t0) Logout\n\n");
 
@@ -178,9 +179,32 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 tenMost(5);
             else if (option == 6 && perk == 1)
                 givePrivileges();
+            else if (option == 7 && perk == 1)
+                newURL();
             else
                 System.out.println("Escolha uma opcao valida!");
         }
+    }
+
+    private static void newURL() {
+        boolean validation = false;
+        String resposta = null;
+        String url = null;
+
+        while (!validation){
+            System.out.println("\nDigite: ");
+            url = sc.nextLine().replaceAll("^[,\\s]+", "");
+            validation = stringChecker(url);
+        }
+
+        while (resposta == null) {
+            try {
+                resposta = serverInterface.newURL(url);
+            }catch (RemoteException e) {
+                retryRMIConnection();
+            }
+        }
+        System.out.println(resposta);
     }
 
     private static void tenMost(int flag) {
@@ -217,8 +241,8 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         String resposta = null;
         String keyword = null;
 
-        System.out.println("\nDigite: ");
         while (!validation){
+            System.out.println("\nDigite: ");
             keyword = sc.nextLine().replaceAll("^[,\\s]+", "");
             validation = stringChecker(keyword);
         }

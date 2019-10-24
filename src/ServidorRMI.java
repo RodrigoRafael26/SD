@@ -95,6 +95,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public void ping() throws java.rmi.RemoteException {
     }
 
+    public String newURL(String url) throws RemoteException {
+        request = "type | newURL ; url | " + url;
+        String answer = dealWithRequest(request);
+        return answer.split(" ; ")[1].split(" | ")[1];
+    }
+
     public int hello() throws RemoteException {
         clientPort++;
         return clientPort;
@@ -209,12 +215,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     public int login(String username, String password) throws RemoteException {
         request = "type | login ; username | " + username + " ; password | " + password;
-        String ans = dealWithRequest(request);
-
-        String tokens[] = ans.split(" ; ");
-        String mes[][] = new String[tokens.length][];
-        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
-        return Integer.parseInt(mes[2][1]);
+//        String ans = dealWithRequest(request);
+//
+//        String tokens[] = ans.split(" ; ");
+//        String mes[][] = new String[tokens.length][];
+//        for (int i = 0; i < tokens.length; i++) mes[i] = tokens[i].split(" | ");
+//        return Integer.parseInt(mes[2][1]);
+        return 1;
     }
 
     public String historic(String user) throws RemoteException {
