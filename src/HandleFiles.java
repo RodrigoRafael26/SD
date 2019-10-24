@@ -1,7 +1,4 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -157,9 +154,50 @@ public class HandleFiles{
     }
 
     //escrever funcoes para ler e escrever o array de links a indexar
+    public void writeUrlList(CopyOnWriteArrayList<String> linkList){
+        File f = new File("linkList");
+
+        try{
+            FileOutputStream fos = new FileOutputStream(f, false);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+
+            oos.writeObject(linkList);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public CopyOnWriteArrayList<String> getLinkList(){
+        //each server has a different file
+        File f = new File("linkList");
+        CopyOnWriteArrayList<String> linkList = null;
+        try {
+            FileInputStream fos = new FileInputStream(f);
+            ObjectInputStream ois = new ObjectInputStream(fos);
+            linkList = (CopyOnWriteArrayList<String>) ois.readObject();
+            ois.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+            return null;
+        }catch (StreamCorruptedException e) {
+            System.out.println("File corrupted restart system");
+            return null;
+        }catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return linkList;
+    }
 
     //Write and read undelivered messages
+    public void writeUndeliveredMessages(CopyOnWriteArrayList<String> messages){
+        //each server has a different file
 
+    }
 
 
 }

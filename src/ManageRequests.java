@@ -113,7 +113,7 @@ public class ManageRequests extends Thread{
                     }
                     searchResults = merged;
                 }
-
+                //order search
                 //convert search results to string and send response
 
                 //need to find a way to show pages info
@@ -153,6 +153,11 @@ public class ManageRequests extends Thread{
 
             case "get_notifications":
                 //pode ser feito no login acho
+                break;
+            case "keepAlive":
+                //save online servers
+                break;
+            case "getOnlineServers":
                 break;
             default:
         }

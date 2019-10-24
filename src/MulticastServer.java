@@ -45,14 +45,12 @@ public class MulticastServer extends Thread{
 
         //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
         WebCrawler wc = new WebCrawler(st);
-        st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
+        //st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
 
-
-        /*
         MulticastSocket socket = null;
         try{
-            socket = new MulticastSocket(PORT);
-            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+            socket = new MulticastSocket(port);
+            InetAddress group = InetAddress.getByName(multicast_address);
             socket.joinGroup(group);
 
             while(true){
@@ -66,7 +64,7 @@ public class MulticastServer extends Thread{
                 //chamar manage requests aqui
                 System.out.println("Port " + request.getPort() + " on " + request.getAddress() +" sent this message:" + s);
 
-                String r = "CALA A PUTA DA BOCA";
+                String r = "Ligacao estabelecida";
                 byte[] bufSend = r.getBytes();
 
 
@@ -82,14 +80,20 @@ public class MulticastServer extends Thread{
             e.printStackTrace();
         }finally{
             //guardar mensagens que estiverem por enviar
+            //
             socket.close();
-        }*/
+
+        }
 
 
         //ManageRequests mr = new ManageRequests(st, "type | register ; username | admin ; password | worked");
         //TCP_Server tcp = new TCP_Server();
         //TCP_Client client = new TCP_Client("localhost");
+
         //tem de mandar as configs do socket TCP por multicast
+
+        //send keepAlives from time to time
+
     }
 
 }
@@ -101,9 +105,10 @@ class Storage{
     private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceIndex_changes;
 
     private CopyOnWriteArrayList<User> users;
-    //create response list?
+    private CopyOnWriteArrayList<String> responses;
 
-    public CopyOnWriteArrayList<String> linkList;
+    private CopyOnWriteArrayList<ServerConfig> onlineServers;
+    private CopyOnWriteArrayList<String> linkList;
     private HandleFiles fileHandler;
     private ServerConfig serverConfig;
 
@@ -116,6 +121,7 @@ class Storage{
         this.users = new CopyOnWriteArrayList<>();
         this.searchIndex_changes = new ConcurrentHashMap<>();
         this.referenceIndex_changes = new ConcurrentHashMap<>();
+        this.onlineServers = new CopyOnWriteArrayList<>();
         fillInfo();
 
     }
@@ -131,8 +137,8 @@ class Storage{
         }
         if (fileHandler.readConfig()!=null){
             serverConfig = fileHandler.readConfig();
-            System.out.println(serverConfig.getPort());
-            System.out.println(serverConfig.getAddress());
+            //System.out.println(serverConfig.getPort());
+            //System.out.println(serverConfig.getAddress());
         }
     }
 
