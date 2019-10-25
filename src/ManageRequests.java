@@ -222,8 +222,9 @@ public class ManageRequests extends Thread{
 
             case "keepAlive":
                 //save online servers
-
+                System.out.println("server is alive");
                 break;
+
             case "getOnlineServer":
                 //this is for RMI server
                 resp = "type | getOnlineServer ; ";
@@ -234,7 +235,9 @@ public class ManageRequests extends Thread{
                 break;
             default:
         }
-
+        if(type.equals("keepAlive")){
+            return;
+        }
         String resp_address = "224.0.224.0";
         int resp_port = 4324;
         MulticastSocket resp_socket = null;

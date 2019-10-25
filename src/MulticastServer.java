@@ -23,8 +23,8 @@ public class MulticastServer extends Thread{
 
     public static void main(String[] args) {
         MulticastServer server = new MulticastServer();
-
         server.start();
+
     }
 
     public  MulticastServer(){
@@ -39,6 +39,9 @@ public class MulticastServer extends Thread{
         this.port = st.getServerConfig().getPort();
         this.multicast_address = st.getServerConfig().getAddress();
         this.server_id = st.getServerConfig().getServer_ID();
+
+        KeepAlive ping = new KeepAlive(st);
+        ping.start();
     }
 
 
@@ -254,11 +257,13 @@ class Storage{
     public CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
         return onlineServers;
     }
+
     public void updateFiles(){
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
         fileHandler.writeUsers(users);
         fileHandler.writeUndeliveredMessages(responses);
+        serverConfig.updateWorkload(linkList.size());
     }
 }
 
@@ -274,11 +279,23 @@ class KeepAlive extends Thread{
         DatagramSocket socket = null;
         try{
             socket = new DatagramSocket();
-            InetAddress address = InetAddress.getByName("localhost");
-            String message = "type | keepAlive ;  serverID | " + st.getServerConfig().getServer_ID() + " address | "+ st.getServerConfig().getAddress() + " ; workload | " + st.getServerConfig().getWorkload();
-            byte[] buffer = message.getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
+            InetAddress address = InetAddress.getByName(st.getServerConfig().getAddress());
+
+
+
             while(true){
+                st.updateFiles();
+
+                String message = "type | keepAlive ;  serverID | " + st.getServerConfig().getServer_ID() + " address | "+ st.getServerConfig().getAddress() + " ; workload | " + st.getServerConfig().getWorkload();
+
+                String length = "" + message.length();
+                byte[] buffer = length.getBytes();
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
+                socket.send(packet);
+
+
+                buffer = message.getBytes();
+                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
                 System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
                 socket.send(packet);
                 try{
