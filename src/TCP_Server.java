@@ -11,7 +11,7 @@ public class TCP_Server {
     public TCP_Server(Storage st){
         this.st = st;
         try{
-            int serverPort = 6000;
+            int serverPort = 6000; // de onde vem este server Port?
 
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
@@ -50,19 +50,14 @@ class Connection extends Thread{
     //=============================
     public void run(){
 
-        //it wont send a response only deal with new information
         String resposta;
         try{
             while(true){
-                //an echo server
-                String data = in.readUTF();
-                System.out.println("T["+ thread_number + "] Recebeu: "+data);
 
-                //mudar a resposta
-                resposta=data.toUpperCase();
                 int i = 0;
                 for (Socket clientSocket: socketList) {
-
+                    //make response hashmaps changes and workload if needed
+                    resposta = "";
                     out = new DataOutputStream(clientSocket.getOutputStream());
                     out.writeUTF(resposta);
                 }

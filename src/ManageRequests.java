@@ -10,16 +10,13 @@ public class ManageRequests extends Thread{
     private Storage server_Storage;
     private String request;
     private String response;
-    private InetAddress group;
-    private int response_port;
-    private String responseAddress;
 
-    public ManageRequests(Storage st, String request, InetAddress group/*, int port, String address*/){
+
+    public ManageRequests(Storage st, String request/*, InetAddress group, int port, String address*/){
         this.server_Storage = st;
         this.request = request;
 //        this.response_port = port;
 //        this.responseAddress = address;
-        this.group = group;
         this.start();
     };
 
@@ -71,6 +68,7 @@ public class ManageRequests extends Thread{
                 if(server_Storage.getUser(username) !=null){
                     User user = server_Storage.getUser(username);
                     if(user.getUsername().compareTo(username) == 0 && user.getPassword().compareTo(password)==0){
+                        //add user to online users
 
                         String resp = "type | status ; operation | success";
 
@@ -224,6 +222,7 @@ public class ManageRequests extends Thread{
 
             case "keepAlive":
                 //save online servers
+
                 break;
             case "getOnlineServer":
                 //this is for RMI server
@@ -241,7 +240,7 @@ public class ManageRequests extends Thread{
         MulticastSocket resp_socket = null;
         try{
             resp_socket = new MulticastSocket();
-            group = InetAddress.getByName("224.0.224.0");
+            InetAddress group = InetAddress.getByName("224.0.224.0");
 
             //send buffer length
             String length = "" + response.length();

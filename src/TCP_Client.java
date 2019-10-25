@@ -4,8 +4,10 @@ import java.net.UnknownHostException;
 
 public class TCP_Client {
     String host;
-    public TCP_Client (String address, int port) {
+    public TCP_Client (String address, int port, Storage st) {
+        //passar o ip do host no config file?
         this.host = address;
+
         Socket s = null;
         int serversocket = port;
         try {
@@ -76,8 +78,11 @@ class ReadAnswer extends Thread{
             e.printStackTrace();
         }
 
+
         // DISPLAY WHAT WAS READ
         System.out.println("Received: " + data);
+
+        //parse the data and update hashmaps
     }
 }
 

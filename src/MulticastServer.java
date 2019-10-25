@@ -1,6 +1,7 @@
 import org.jsoup.select.Elements;
 
 import java.io.*;
+import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -43,10 +44,6 @@ public class MulticastServer extends Thread{
 
     public void run(){
 
-        //Isto só serve de teste, esta parte não é feita no multicast Server mas sim no ManageRequests (admin)
-//        WebCrawler wc = new WebCrawler(st);
-        //st.addLinkToQueue("https://pt.wikipedia.org/wiki/Engenharia_Inform%C3%A1tica");
-
         MulticastSocket socket = null;
         try{
             socket = new MulticastSocket(port);
@@ -71,7 +68,7 @@ public class MulticastServer extends Thread{
 
                 //chamar manage requests aqui
                 //System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
-                ManageRequests mr = new ManageRequests(st, s, group);
+                ManageRequests mr = new ManageRequests(st, s);
 
             }
 
@@ -156,6 +153,7 @@ class Storage{
         if(searchIndex.get(word)!=null){
             //if the ws is not in word index add it
             if(!searchIndex.get(word).contains(ws)){
+
                 //if this word doesnt exist in changes add it
                 if(searchIndex_changes.get(word) == null){
                     searchIndex_changes.put(word, new CopyOnWriteArrayList<>());
@@ -177,12 +175,19 @@ class Storage{
     public void addReferenceToHash(String ws, String s){
         if (referenceIndex.get(s) != null) {
             if(!referenceIndex.get(s).contains(ws)){
-
+                //if this url doesnt exist in changes add it
+                if(referenceIndex_changes.get(s) == null){
+                    referenceIndex_changes.put(s, new CopyOnWriteArrayList<>());
+                }
                 referenceIndex.get(s).add(ws);
+                referenceIndex_changes.get(s).add(ws);
+
             }
         }else {
             referenceIndex.put(s, new CopyOnWriteArrayList<>());
+            referenceIndex_changes.put(s, new CopyOnWriteArrayList<>());
             referenceIndex.get(s).add(ws);
+            referenceIndex_changes.get(s).add(ws);
         }
     }
 
@@ -254,6 +259,37 @@ class Storage{
         fileHandler.writeSearchIndex(searchIndex);
         fileHandler.writeUsers(users);
         fileHandler.writeUndeliveredMessages(responses);
+    }
+}
+
+
+class KeepAlive extends Thread{
+    Storage st;
+    public KeepAlive(Storage st){
+        //send keepAlives to multicast group
+        this.st = st;
+    }
+
+    public void run(){
+        DatagramSocket socket = null;
+        try{
+            socket = new DatagramSocket();
+            InetAddress address = InetAddress.getByName("localhost");
+            String message = "type | keepAlive ;  serverID | " + st.getServerConfig().getServer_ID() + " address | "+ st.getServerConfig().getAddress() + " ; workload | " + st.getServerConfig().getWorkload();
+            byte[] buffer = message.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
+            while(true){
+                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
+                socket.send(packet);
+                try{
+                    this.sleep(10000);
+                }catch(InterruptedException e){}
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            socket.close();
+        }
     }
 }
 

@@ -7,6 +7,8 @@ public class ServerConfig implements Serializable {
     private String address;
     private int workload;
 
+    //posso ter de meter aqui TCP address e TCP port
+
     public ServerConfig(int port, String address, int server_ID){
         this.port = port;
         this.address = address;
