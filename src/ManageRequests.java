@@ -2,8 +2,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ManageRequests extends Thread{
@@ -65,21 +68,25 @@ public class ManageRequests extends Thread{
                 password = data[1].replace("password | ", "");
 
                 //check if user is registered and confirm passowrd
+                String resp;
                 if(server_Storage.getUser(username) !=null){
                     User user = server_Storage.getUser(username);
                     if(user.getUsername().compareTo(username) == 0 && user.getPassword().compareTo(password)==0){
                         //add user to online users
 
-                        String resp = "type | status ; operation | success";
+                        resp = "type | status ; operation | success";
 
+                    }else {
+                        resp = "type | status ; operation | failed";
                     }
                 }else{
 
                     //send message saying user doesnt exist
-                    String resp = "type | status ; operation | failed";
-                    this.response = resp;
+                    resp = "type | status ; operation | failed";
+
                 }
 
+                this.response = resp;
                 break;
 
             case "historico":
@@ -88,7 +95,7 @@ public class ManageRequests extends Thread{
                 server_Storage.getUser(username).getSearchHistory();
 
                 //send message with all information
-                String resp = "type | historico ; ";
+                resp = "type | historico ; ";
                 u = server_Storage.getUser(username);
                 for(String temp : u.getSearchHistory()){
                     resp += "item_name | "+ temp + " ; ";
@@ -138,27 +145,34 @@ public class ManageRequests extends Thread{
 
                     for(String url : temp){
                         if(searchResults.contains(url)){
-                            merged.add(url);
+                            int i = 0;
+
+                            merged.add(i,url);
                         }
                     }
                     searchResults = merged;
                 }
-                //order search
 
+                //order search results
+                String [] array = (String[]) searchResults.toArray();
+                Arrays.sort(array, new URL_Comparator(server_Storage));
 
                 //convert search results to string and send response
                 resp = "type | search ; item_count | "+ searchResults.size() + " ; ";
                 String title = "";
                 String citation = "";
-                for(String temp : searchResults){
+                String order_search;
+
+                for(int i = 0; i<10; i++){
+                    order_search = array[i];
                     try{
-                        Document doc = Jsoup.connect(temp).get();
+                        Document doc = Jsoup.connect(order_search).get();
                         title = doc.title();
                         citation = doc.text().substring(0,20);
                     } catch (Exception e) {
                         continue;
                     }
-                    resp += "item_name | "+temp+ " ; "+ "title | "+ title + " ; "+ "citation | "+ citation + " ; ";
+                    resp += "item_name | "+order_search+ " ; "+ "title | "+ title + " ; "+ "citation | "+ citation + " ; ";
                 }
                 this.response = resp;
 
@@ -192,6 +206,17 @@ public class ManageRequests extends Thread{
                 break;
 
             case "10MostImportant":
+                //get all the indexed websites
+                String[] mostImportant = (String[]) server_Storage.getReferenceHash().keySet().toArray();
+
+                Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
+
+                for (String s : mostImportant){
+                    System.out.println(s);
+                }
+                resp = "recebeu o pedido certo";
+
+                //type | 10MostImportant ; item_name | url ; item_name | url ;
 
                 break;
 
@@ -222,6 +247,22 @@ public class ManageRequests extends Thread{
 
             case "keepAlive":
                 //save online servers
+                server_Storage.getOnlineServers().clear();
+                String[] serverInfo = data[0].split(" ; ");
+                for (String s : serverInfo){
+                    String[] info = s.split("~");
+
+                    int server_id = Integer.parseInt(info[0].replace("serverID ",""));
+                    String address = info[1].replace("address ", "");
+                    int server_port = Integer.parseInt(info[2].replace("port ",""));
+
+                    System.out.println(server_id);
+
+                    ServerConfig temp_S = new ServerConfig(server_port,address,server_id);
+                    temp_S.updateWorkload(Integer.parseInt(info[3].replace("workload ", "")));
+
+                    server_Storage.addOnlineServer(temp_S);
+                }
                 System.out.println("server is alive");
                 break;
 
@@ -239,7 +280,7 @@ public class ManageRequests extends Thread{
             return;
         }
         String resp_address = "224.0.224.0";
-        int resp_port = 4324;
+        int resp_port = 4320;
         MulticastSocket resp_socket = null;
         try{
             resp_socket = new MulticastSocket();
@@ -273,4 +314,17 @@ public class ManageRequests extends Thread{
 
 
 
+}
+
+class URL_Comparator implements Comparator<String> {
+    Storage st;
+
+    public URL_Comparator(Storage st){
+        this.st = st;
+    }
+
+    @Override
+    public int compare(String o1, String o2) {
+        return st.getReferenceHash().get(o1).size() - st.getReferenceHash().get(o2).size();
+    }
 }

@@ -366,9 +366,11 @@ class MulticastConnection extends Thread {
                     info[1] = aux[1].split(" \\| ");
                     serverNumber = Integer.parseInt(info[1][0].trim());
                     currentRequest = Integer.parseInt(info[1][1].trim());
+
                     if ((serverRmi.getServers()[serverNumber-1]) && this.servers[serverNumber-1] < 28){
                         serverRmi.getServers()[serverNumber-1] = false;
                     }
+
                     if (!serverRmi.getServers()[serverNumber - 1]) {
                         if(serverCounter++ > 0){
                             String request = "type | config ; currentRequest | " + currentRequest;
