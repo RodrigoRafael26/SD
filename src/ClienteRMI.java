@@ -16,7 +16,6 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static int PORT;
     private static String RMIhost;
     private static String myHost;
-    private static String[] resposta_array = new String[10];
 
     private ClienteRMI() throws RemoteException {
     }
@@ -75,7 +74,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
     private static void startsRMIConnection() {
         try {
-            serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, PORT).lookup(RMIhost);
+            serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
         } catch (RemoteException | NotBoundException e) {
             retryRMIConnection();
         }
@@ -106,6 +105,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             System.out.println("\n\t1) Registar");
             System.out.println("\n\t2) Login");
+            System.out.println("\n\t3) Pesquisa");
             System.out.println("\n\t0) Exit");
 
             try {
@@ -123,6 +123,8 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                         }
                     }
                     break;
+                }else if (option == 3) {
+                    search();
                 }
                 else
                     System.out.println("Digita uma opcao valida!");
@@ -208,19 +210,18 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     }
 
     private static void tenMost(int flag) {
-        while(resposta_array[0].length() == 0) {
+        String resposta = "";
+        while(resposta.length() == 0) {
             try {
                 if(flag == 4)
-                    resposta_array = serverInterface.tenMostImportant();
+                    resposta = serverInterface.tenMostImportant();
                 else if(flag == 5)
-                    resposta_array = serverInterface.tenMostSearched();
+                    resposta = serverInterface.tenMostSearched();
             } catch (RemoteException e) {
                 retryRMIConnection();
             }
         }
-        for (int i = 0; i < resposta_array.length; i++) {
-            System.out.println(i + ") " + resposta_array[i]);
-        }
+        System.out.println(resposta);
     }
 
     private static void verHistorico() {
@@ -259,7 +260,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
     private static void pagesList() {
         String aux, url = null;
-        ArrayList<String> resposta = new ArrayList<String>();
+        String resposta = null;
         int aux_int;
         boolean validation = false;
 
@@ -278,13 +279,10 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 }
             }
         }
-        while(resposta.size() == 0){
+        while(resposta == null){
             try {
                 resposta = serverInterface.pagesList(url);
-                if (resposta.size() > 0) {
-                    for(int i = 0; i < resposta.size(); i++)
-                        System.out.println(resposta.get(i));
-                }
+                System.out.println("| LIST: \n" + resposta);
             }catch (RemoteException e){
                 retryRMIConnection();
             }
@@ -320,19 +318,19 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 try {
                     if (option == 1)
                         verifier = serverInterface.register(username, password);
-                    else
+                    else if (option == 2)
                         verifier = serverInterface.login(username, password);
-                    System.out.println(verifier);
                     break;
                 } catch (RemoteException e) {
                     retryRMIConnection();
                 }
             }
-            if (verifier < 4) {
+            if (verifier < 3) {
                 if (option == 1)
                     System.out.println("User registered successfully!");
                 else
                     System.out.println("Logged in successfully!");
+
                 user = username;
                 perk = verifier;
                 while(true) {
@@ -352,7 +350,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 mainMenu();
                 return;
             } else {
-                if(verifier==4) {
+                if(verifier == 3) {
                     if (option == 1)
                         System.out.println("Username already exists. Please choose another one!");
                     else
