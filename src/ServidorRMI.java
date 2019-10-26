@@ -131,7 +131,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private String dealWithRequest(String request) {
         MulticastSocket socket = null;
         String tipo_request = request.split(" ; ")[0].split(" \\| ")[1];
-        String message = "type | " + tipo_request + " ; operation | failed";
+        String message = "";
         int count = 0;
 
         while(count < 6){
@@ -141,6 +141,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.joinGroup(group);
                 socket.setLoopbackMode(false);
 
+//              Envia para multicast o tamanha do buffer
                 String length = "" + request.length();
                 byte[] buffer = length.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
@@ -150,11 +151,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                    Thread.sleep(1000);
                 } catch (InterruptedException e) {}
 
+//              envia para multicast o request
                 buffer = request.getBytes();
                 packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
                 System.out.println("Sent to multicast address: " + request);
 
+//                para 5 segundos para o multicast ter tempo suficiente para efetuar o pedido e recebe o tamanho do buffer
                 buffer = new byte[8];
                 packet = new DatagramPacket(buffer, buffer.length);
                 socket = new MulticastSocket(4324);
@@ -162,14 +165,15 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.setSoTimeout(5000);
                 socket.receive(packet);
 
+//                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
                 message = new String(packet.getData(), 0, packet.getLength());
                 int bufferLength = Integer.parseInt(message.trim());
                 buffer = new byte[bufferLength];
                 packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-//                System.out.println( packet.getData().length);
-//                System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
+                message = new String(packet.getData(), 0, packet.getLength());
+                System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
                 break;
             } catch (SocketTimeoutException e) {
                 if(count++ < 0) {
