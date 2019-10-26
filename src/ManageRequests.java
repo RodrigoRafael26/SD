@@ -7,6 +7,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ManageRequests extends Thread{
@@ -121,16 +122,19 @@ public class ManageRequests extends Thread{
 
                 break;
 
-            case "add_URL":
+            case "newURL":
                 String newUrl = data[0].replace("url | ", "");
 
                 //add link to queue
                 server_Storage.addLinkToQueue(newUrl);
 
                 response = "type | status ; operation | success";
-
-                response = "type | status ; operation | failed";
-
+                try {
+                    Document doc = Jsoup.connect(newUrl).get();
+                } catch (Exception e) {
+                    // mandar notificacao para o admin a dizer que o url nao esta disponivel
+                    response = "type | status ; operation | failed";
+                }
                 break;
 
             case "search":
@@ -211,20 +215,54 @@ public class ManageRequests extends Thread{
 
                 Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
 
-                for (String s : mostImportant){
-                    System.out.println(s);
+                resp = "type | 10MostImportant ; ";
+
+                if(mostImportant.length >= 10){
+                    for(int i = 0; i<10; i++){
+                        resp += "item_name | " + mostImportant[10] + " ; ";
+                    }
+                }else{
+                    for (String s : mostImportant){
+//                    System.out.println(s);
+                        resp += "item_name | " + s + " ; ";
+                    }
+
                 }
-                resp = "recebeu o pedido certo";
+
 
                 //type | 10MostImportant ; item_name | url ; item_name | url ;
 
                 break;
 
             case "10MostSearched":
+                //get all searched terms;
+                //go through all users and get all searches
+                HashMap<String, Integer> termFrequency = new HashMap<String, Integer>();
+                CopyOnWriteArrayList<User> userList = server_Storage.getUserList();
 
-                break;
+                for(User user_temp: userList){
+                    for(String s :user_temp.getSearchHistory()){
+                        if(termFrequency.get(s)!=null) {
+                            termFrequency.put(s,termFrequency.get(s)+1);
+                        } else{
+                            termFrequency.put(s,1);
+                        }
+                    }
+                }
 
-            case "newURL":
+                String[] ordered_array = (String[]) termFrequency.keySet().toArray();
+                Arrays.sort(ordered_array, new terms_Comparator(termFrequency));
+
+                resp = "type | 10MostSearched ; ";
+                if(ordered_array.length >=10){
+                    for(int i=0; i<10; i++){
+                        resp += "item_name | " + ordered_array[i] + " ; ";
+                    }
+                }else{
+                    for(String s : ordered_array){
+                        resp += "item_name | " + s + " ; ";
+                    }
+                }
 
                 break;
 
@@ -312,12 +350,10 @@ public class ManageRequests extends Thread{
 
     }
 
-
-
 }
 
 class URL_Comparator implements Comparator<String> {
-    Storage st;
+    private Storage st;
 
     public URL_Comparator(Storage st){
         this.st = st;
@@ -326,5 +362,16 @@ class URL_Comparator implements Comparator<String> {
     @Override
     public int compare(String o1, String o2) {
         return st.getReferenceHash().get(o1).size() - st.getReferenceHash().get(o2).size();
+    }
+}
+
+class terms_Comparator implements Comparator<String> {
+    private HashMap<String, Integer> map;
+    public terms_Comparator(HashMap<String, Integer> map){
+        this.map = map;
+    }
+    @Override
+    public int compare(String o1, String o2) {
+        return map.get(o1) - map.get(o2);
     }
 }
