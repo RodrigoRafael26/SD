@@ -293,11 +293,16 @@ public class ManageRequests extends Thread{
                     int server_id = Integer.parseInt(info[0].replace("serverID ",""));
                     String address = info[1].replace("address ", "");
                     int server_port = Integer.parseInt(info[2].replace("port ",""));
-
+                    int tcp_port = Integer.parseInt(info[4].replace("TCPport ",""));
                     System.out.println(server_id);
 
-                    ServerConfig temp_S = new ServerConfig(server_port,address,server_id);
-                    temp_S.updateWorkload(Integer.parseInt(info[3].replace("workload ", "")));
+                    ServerConfig temp_S = null;
+                    try {
+                        temp_S = new ServerConfig(server_port,address,tcp_port, server_id);
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+                    temp_S.updateWorkload(Integer.parseInt(info[5].replace("workload ", "")));
 
                     server_Storage.addOnlineServer(temp_S);
                 }
@@ -318,7 +323,7 @@ public class ManageRequests extends Thread{
             return;
         }
         String resp_address = "224.0.224.0";
-        int resp_port = 4320;
+        int resp_port = 4324;
         MulticastSocket resp_socket = null;
         try{
             resp_socket = new MulticastSocket();

@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.UnknownHostException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -127,11 +128,12 @@ public class HandleFiles{
 
     public ServerConfig readConfig(){
         String multicast_address;
-        int port;
+        int multicast_port;
+        int tcp_port;
         int serverID;
 
         File config_file = new File(configFile);
-        String[] st = new String[4];
+        String[] st = new String[5];
         try {
             BufferedReader br = new BufferedReader(new FileReader(config_file));
 
@@ -147,11 +149,17 @@ public class HandleFiles{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        port = Integer.parseInt(st[0]);
+        multicast_port = Integer.parseInt(st[0]);
         multicast_address = st[1];
-        serverID = Integer.parseInt(st[2]); //talvez mude isto para ser passado em parametro
+        tcp_port = Integer.parseInt(st[2]);
+        serverID = Integer.parseInt(st[3]);
 
-        ServerConfig s = new ServerConfig(port,multicast_address,serverID);
+        ServerConfig s = null;
+        try {
+            s = new ServerConfig(multicast_port,multicast_address,tcp_port, serverID);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         return s;
     }
 
@@ -194,12 +202,5 @@ public class HandleFiles{
         }
         return linkList;
     }
-
-    //Write and read undelivered messages
-    public void writeUndeliveredMessages(CopyOnWriteArrayList<String> messages){
-        //each server has a different file
-
-    }
-
 
 }

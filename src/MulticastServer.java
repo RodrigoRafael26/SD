@@ -255,7 +255,6 @@ class Storage{
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
         fileHandler.writeUsers(users);
-        fileHandler.writeUndeliveredMessages(responses);
         serverConfig.updateWorkload(linkList.size());
     }
 }
@@ -279,7 +278,7 @@ class KeepAlive extends Thread{
             while(true){
                 st.updateFiles();
 
-                String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~workload " + st.getServerConfig().getWorkload();
+                String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~hostname "+ st.getServerConfig().getHostname() + "~TCPport "+ st.getServerConfig().getTcp_port()+"~workload " + st.getServerConfig().getWorkload();
 
                 String length = "" + message.length();
                 byte[] buffer = length.getBytes();
@@ -292,7 +291,9 @@ class KeepAlive extends Thread{
                 System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
                 socket.send(packet);
                 try{
-                    this.sleep(40000);
+                    this.sleep(30000);
+                    //clear online servers list
+
                 }catch(InterruptedException e){}
             }
         }catch(IOException e){

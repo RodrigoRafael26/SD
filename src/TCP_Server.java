@@ -8,11 +8,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TCP_Server {
     Storage st;
-    public TCP_Server(Storage st){
+    private int serverPort;
+    public TCP_Server(Storage st, int tcp_port){
         this.st = st;
+        this.serverPort = tcp_port;
         try{
-            int serverPort = 6000; // de onde vem este server Port?
-
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
             CopyOnWriteArrayList<Socket> socketList = new CopyOnWriteArrayList<Socket>();
@@ -47,7 +47,9 @@ class Connection extends Thread{
             this.start();
         }catch(IOException e){System.out.println("Connection:" + e.getMessage());}
     }
-    //=============================
+
+
+
     public void run(){
 
         String resposta;

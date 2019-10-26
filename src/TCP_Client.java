@@ -4,9 +4,9 @@ import java.net.UnknownHostException;
 
 public class TCP_Client {
     String host;
-    public TCP_Client (String address, int port, Storage st) {
-        //passar o ip do host no config file?
-        this.host = address;
+    public TCP_Client (String hostname, int port, Storage st) {
+        //this.host = address;
+        this.host = hostname;
 
         Socket s = null;
         int serversocket = port;
@@ -24,7 +24,7 @@ public class TCP_Client {
             BufferedReader reader = new BufferedReader(input);
             System.out.println("Introduza texto:");
             ReadAnswer t = new ReadAnswer(s);
-            while (true) {
+            /*while (true) {
                 // READ STRING FROM KEYBOARD
 
                 try {
@@ -35,7 +35,7 @@ public class TCP_Client {
                 out.writeUTF(texto);
             }
             // 3o passo
-
+    */
         } catch (UnknownHostException e) {
             System.out.println("Sock:" + e.getMessage());
         } catch (EOFException e) {

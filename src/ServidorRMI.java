@@ -157,12 +157,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.send(packet);
                 System.out.println("Sent to multicast address: " + request);
 
-//                para 5 segundos para o multicast ter tempo suficiente para efetuar o pedido e recebe o tamanho do buffer
+
                 buffer = new byte[8];
                 packet = new DatagramPacket(buffer, buffer.length);
                 socket = new MulticastSocket(4324);
                 socket.joinGroup(group);
-                socket.setSoTimeout(5000);
+                //socket.setSoTimeout(5000);
                 socket.receive(packet);
 
 //                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
