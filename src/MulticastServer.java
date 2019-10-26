@@ -15,19 +15,18 @@ public class MulticastServer extends Thread{
     private String multicast_address ;
     private int port;
     private int server_id;
-    private long SLEEP_TIME = 5000;
     Storage st;
 
 
 
 
     public static void main(String[] args) {
-        MulticastServer server = new MulticastServer();
+        MulticastServer server = new MulticastServer(args[0]);
         server.start();
 
     }
 
-    public  MulticastServer(){
+    public  MulticastServer(String configFile){
 
         super("Server is Running");
         try {
@@ -35,7 +34,7 @@ public class MulticastServer extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.st = new Storage();
+        this.st = new Storage(configFile);
         this.port = st.getServerConfig().getPort();
         this.multicast_address = st.getServerConfig().getAddress();
         this.server_id = st.getServerConfig().getServer_ID();
@@ -52,7 +51,7 @@ public class MulticastServer extends Thread{
             socket = new MulticastSocket(port);
             InetAddress group = InetAddress.getByName(multicast_address);
             socket.joinGroup(group);
-            socket.setLoopbackMode(false);
+            //socket.setLoopbackMode(false);
 
             while(true){
                 byte[] socketBuffer = new byte[8];
@@ -85,16 +84,6 @@ public class MulticastServer extends Thread{
 
         }
 
-        //create thread to save state from time to time? or do it in keepAlive Thread
-
-        //ManageRequests mr = new ManageRequests(st, "type | register ; username | admin ; password | worked");
-        //TCP_Server tcp = new TCP_Server();
-        //TCP_Client client = new TCP_Client("localhost");
-
-        //tem de mandar as configs do socket TCP por multicast
-
-        //send keepAlives from time to time
-
     }
 
 }
@@ -115,8 +104,8 @@ class Storage{
     private ServerConfig serverConfig;
 
 
-    public Storage(){
-        this.fileHandler = new HandleFiles();
+    public Storage(String configFile){
+        this.fileHandler = new HandleFiles(configFile);
         this.searchIndex = new ConcurrentHashMap<>();
         this.referenceIndex =  new ConcurrentHashMap<>();
         this.linkList = new CopyOnWriteArrayList<>();
@@ -258,6 +247,10 @@ class Storage{
         return onlineServers;
     }
 
+    public void addOnlineServer(ServerConfig s){
+        onlineServers.add(s);
+    }
+
     public void updateFiles(){
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
@@ -286,7 +279,7 @@ class KeepAlive extends Thread{
             while(true){
                 st.updateFiles();
 
-                String message = "type | keepAlive ;  serverID | " + st.getServerConfig().getServer_ID() + " address | "+ st.getServerConfig().getAddress() + " ; workload | " + st.getServerConfig().getWorkload();
+                String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~workload " + st.getServerConfig().getWorkload();
 
                 String length = "" + message.length();
                 byte[] buffer = length.getBytes();
@@ -299,7 +292,7 @@ class KeepAlive extends Thread{
                 System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
                 socket.send(packet);
                 try{
-                    this.sleep(10000);
+                    this.sleep(40000);
                 }catch(InterruptedException e){}
             }
         }catch(IOException e){

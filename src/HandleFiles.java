@@ -3,8 +3,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class HandleFiles{
-
-    public HandleFiles(){}
+    String configFile;
+    public HandleFiles(String config){
+        this.configFile = config;
+    }
 
     public CopyOnWriteArrayList<User> readUsers(){
 
@@ -128,7 +130,7 @@ public class HandleFiles{
         int port;
         int serverID;
 
-        File config_file = new File("config_1.txt");
+        File config_file = new File(configFile);
         String[] st = new String[4];
         try {
             BufferedReader br = new BufferedReader(new FileReader(config_file));

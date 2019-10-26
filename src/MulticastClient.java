@@ -2,6 +2,7 @@ import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 /**
@@ -39,8 +40,13 @@ public class MulticastClient extends Thread {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
                 String message = new String(packet.getData(), 0, packet.getLength());
+                if(message.startsWith("type | keepAlive") || !message.startsWith("type")) continue;
+
+                socket.receive(packet);
+                System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
+                System.out.println(message);
+                message = new String(packet.getData(), 0, packet.getLength());
                 System.out.println(message);
             }
         } catch (IOException e) {
@@ -62,35 +68,28 @@ class MulticastUser extends Thread {
     public void run() {
         MulticastSocket socket = null;
         System.out.println(this.getName() + " ready...");
+        //String readKeyboard = "Cliente ligado";
         try {
-            socket = new MulticastSocket();  // create socket without binding it (only for sending)
             Scanner keyboardScanner = new Scanner(System.in);
-            /*while (true) {
+            while (true) {
                 String readKeyboard = keyboardScanner.nextLine();
-                byte[] buffer = readKeyboard.getBytes();
+                String length = ""+readKeyboard.length();
+                byte[] buffer = length.getBytes();
+                socket = new MulticastSocket();  // create socket without binding it (only for sending)
 
                 InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
-            }*/
-            String readKeyboard = "Cliente ligado";
-            byte[] buffer = readKeyboard.getBytes();
-            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-            socket.send(packet);
 
-            byte[] rBuffer = new byte[256];
-            DatagramPacket response = new DatagramPacket(rBuffer, rBuffer.length);
-            socket.receive(response);
-
-            byte[] data = response.getData();
-            String s = new String(data,0,data.length);
-
-            System.out.println(s);
+                buffer = readKeyboard.getBytes();
+                packet = new DatagramPacket(buffer, buffer.length, group, PORT);
+                socket.send(packet);
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            socket.close();
         }
+
     }
 }

@@ -18,6 +18,7 @@ public class WebCrawler extends Thread{
 
     public WebCrawler(Storage st){
         this.st = st;
+        System.out.println("começou o web crawler");
         this.start();
     }
 
