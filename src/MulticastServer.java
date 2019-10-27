@@ -1,3 +1,4 @@
+import com.sun.security.ntlm.Server;
 import org.jsoup.select.Elements;
 
 import java.io.*;
@@ -52,6 +53,7 @@ public class MulticastServer extends Thread{
 
         WebCrawler wc = new WebCrawler(st);
         ManageRequests mr = new ManageRequests(st);
+        UpdateServers us = new UpdateServers(st);
         try{
             socket = new MulticastSocket(port);
             InetAddress group = InetAddress.getByName(multicast_address);
@@ -72,7 +74,7 @@ public class MulticastServer extends Thread{
 //                byte[] data = packet.getData();
 //                String s = new String(data,0,data.length);
 //                System.out.println(request);
-                System.out.println("recieved request");
+//                System.out.println("recieved request");
                 st.addRequestToQueue(request);
 
                 //chamar manage requests aqui
@@ -127,6 +129,7 @@ class Storage{
 
     }
     private void fillInfo(){
+
         if(fileHandler.getReferenceIndex()!=null){
             referenceIndex = fileHandler.getReferenceIndex();
         }
@@ -141,6 +144,7 @@ class Storage{
             //System.out.println(serverConfig.getPort());
             //System.out.println(serverConfig.getAddress());
         }
+        onlineServers.add(serverConfig);
     }
 
     public synchronized void addLinkToQueue(String ws){
@@ -240,6 +244,8 @@ class Storage{
         requestQueue.remove(0);
         return ws;
     }
+
+
     public synchronized String getLink(){
         while(linkList.isEmpty()){
             try{
@@ -270,12 +276,27 @@ class Storage{
         }
     }
 
-    public CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
+    public synchronized CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
+        while (onlineServers.size()<2){
+            try{
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         return onlineServers;
     }
+    public boolean isServerOnline(ServerConfig s){
+        for(ServerConfig temp : onlineServers) {
+            if(temp.getServer_ID() == s.getServer_ID()) return true;
+        }
 
-    public void addOnlineServer(ServerConfig s){
+        return false;
+    }
+
+    public synchronized void addOnlineServer(ServerConfig s){
         onlineServers.add(s);
+        notify();
     }
 
     public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getSearchUpdates(){
@@ -296,13 +317,14 @@ class Storage{
 
 
 class KeepAlive extends Thread{
-    Storage st;
+    private Storage st;
     public KeepAlive(Storage st){
         //send keepAlives to multicast group
         this.st = st;
     }
 
     public void run(){
+        System.out.println("started keepAlive");
         DatagramSocket socket = null;
         try{
             socket = new DatagramSocket();
@@ -323,7 +345,7 @@ class KeepAlive extends Thread{
 
 //                buffer = message.getBytes();
 //                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
-                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
+//                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
 //                socket.send(packet);
                 try{
                     this.sleep(10000);

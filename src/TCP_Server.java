@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TCP_Server extends Thread{
-    Storage st;
+    private Storage st;
     private int serverPort;
     public TCP_Server(Storage st, int tcp_port){
         this.st = st;
@@ -15,13 +15,14 @@ public class TCP_Server extends Thread{
         this.start();
     }
     public void run(){
+        System.out.println("started tcp server");
         try{
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
             CopyOnWriteArrayList<Socket> socketList = new CopyOnWriteArrayList<Socket>();
             while(true) {
                 Socket clientSocket = listenSocket.accept(); // BLOQUEANTE
-//                System.out.println("CLIENT_SOCKET (created at accept())="+clientSocket);
+                System.out.println("CLIENT_SOCKET (created at accept())="+clientSocket);
                 socketList.add(clientSocket);
                 new Connection(clientSocket, socketList);
 
@@ -54,20 +55,24 @@ class Connection extends Thread{
     public void run(){
 
         try{
-            while(true){
 
+                System.out.println("chegou aqui/ socketList size: " +socketList.size());
                 int i = 0;
                 for (Socket clientSocket: socketList) {
                     //update hashmaps and recieve workload if needed
                     in = new DataInputStream(clientSocket.getInputStream());
                     //out.writeUTF(resposta);
                     String synchro = in.readUTF();
+
                     System.out.println(synchro);
                 }
+                socketList.clear();
+                System.out.println("saiu do for");
 
 
-            }
+
         }catch(EOFException e){
+            e.getMessage();
             System.out.println("EOF:" + e);
         }catch(IOException e){
             System.out.println("IO:" + e);

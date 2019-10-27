@@ -28,7 +28,7 @@ public class ManageRequests extends Thread {
 
 
     public void run() {
-        //System.out.println(request);
+        System.out.println("started manage requests");
         while (true) {
 
             this.request = server_Storage.getRequest();
@@ -324,31 +324,16 @@ public class ManageRequests extends Thread {
                     //if server is already on list update information
                     boolean serverIsOn = false;
 
-                    for (ServerConfig server : server_Storage.getOnlineServers()) {
-                        if (server.getServer_ID() == temp_S.getServer_ID()) serverIsOn = true;
+//                    for (ServerConfig server : server_Storage.getOnlineServers()) {
+//                        if (server.getServer_ID() == temp_S.getServer_ID()) serverIsOn = true;
+//                    }
+                    if(temp_S.getServer_ID() != server_Storage.getServerConfig().getServer_ID() && !server_Storage.isServerOnline(temp_S)){
+                        server_Storage.addOnlineServer(temp_S);
                     }
 
-                    if (!serverIsOn) server_Storage.addOnlineServer(temp_S);
 
-                    //create message to send to other servers
-    //                String updateMessage = "searchIndex|";
-    //                for(String searchTerm : server_Storage.getSearchUpdates().keySet()){
-    //                    updateMessage += searchTerm + " | " + server_Storage.getSearchUpdates().get(searchTerm).toString().replace("[","").replace(",",";".replace("]",""));
-    //                }
-    //                updateMessage += "referenceIndex|";
-    //                for(String indexRef : server_Storage.getReferenceUpdates().keySet()){
-    //                    updateMessage += indexRef + " | " + server_Storage.getSearchUpdates().get(indexRef).toString().replace("[","").replace(",",";".replace("]",""));
-    //                }
+//                    System.out.println("servers online " + server_Storage.getOnlineServers().size());
 
-                    //create TCP Client connecting to every online server
-                    TCP_Client[] client_List = new TCP_Client[server_Storage.getOnlineServers().size()];
-                    int i = 0;
-                    for (ServerConfig tempList : server_Storage.getOnlineServers()) {
-                        if (tempList.getServer_ID() != server_Storage.getServerConfig().getServer_ID()) {
-                            client_List[i] = new TCP_Client(server_Storage,tempList.getHostname(), tempList.getTcp_port(), "hello");
-                        }
-                        i++;
-                    }
                     //System.out.println("server is alive");
                     break;
 
@@ -363,7 +348,6 @@ public class ManageRequests extends Thread {
                 default:
             }
             if (type.equals("keepAlive")) {
-                System.out.println("keepAlive");
                 continue;
             }
 
