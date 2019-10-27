@@ -39,6 +39,7 @@ public class ManageRequests extends Thread {
 
             String[] data = parameters.split(" ; ");
             //send ack packet
+            System.out.println(type);
             switch (type) {
                 case "register":
                     //parse the request
@@ -51,13 +52,14 @@ public class ManageRequests extends Thread {
                     //do not allow duplicate users
                     boolean isAdmin;
                     int id;
-
+                    String resp;
                     if (server_Storage.getUserList().isEmpty()) {
                         isAdmin = true;
                         id = 1;
 
                     } else {
-                        if (server_Storage.getUser(username) == null) {
+                        if (server_Storage.getUser(username) != null) {
+                            resp = "type | status ; operation | failed";
                             break;
                         } else {
 
@@ -73,7 +75,8 @@ public class ManageRequests extends Thread {
                     //add user to list
 
                     server_Storage.addUser(u);
-                    String resp = "type | status ; operation | success ; isAdmin | " + u.isAdmin();
+
+                    resp = "type | status ; operation | success ; isAdmin | " + u.isAdmin();
                     this.response = resp;
                     System.out.println("user added");
                     break;
@@ -161,7 +164,7 @@ public class ManageRequests extends Thread {
                     for (String s : seachTerms) {
                         CopyOnWriteArrayList<String> merged = new CopyOnWriteArrayList<>();
                         CopyOnWriteArrayList<String> temp = server_Storage.getSearchHash().get(s);
-
+                        System.out.println(temp);
                         for (String url : temp) {
                             if (searchResults.contains(url)) {
                                 int i = 0;
@@ -364,6 +367,7 @@ public class ManageRequests extends Thread {
     //            resp_socket.send(packet);
 
                 //send response
+                System.out.println(response);
                 byte[] buffer = response.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
                 packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
