@@ -160,11 +160,17 @@ public class ManageRequests extends Thread {
                     String[] seachTerms = data[0].replace("text | ", "").split(" ");
 
                     CopyOnWriteArrayList<String> searchResults = server_Storage.getSearchHash().get(seachTerms[0]);
-
+                    boolean opFailed = false;
                     for (String s : seachTerms) {
                         CopyOnWriteArrayList<String> merged = new CopyOnWriteArrayList<>();
                         CopyOnWriteArrayList<String> temp = server_Storage.getSearchHash().get(s);
-                        System.out.println(temp);
+
+                        if (temp == null){
+                            opFailed = true;
+                            resp = "type | status ; operation | failed";
+                            break;
+                        }
+
                         for (String url : temp) {
                             if (searchResults.contains(url)) {
                                 int i = 0;
@@ -176,31 +182,34 @@ public class ManageRequests extends Thread {
                     }
 
                     //order search results
-                    String[] array = (String[]) searchResults.toArray();
-                    Arrays.sort(array, new URL_Comparator(server_Storage));
+                    if(!opFailed) {
 
-                    //convert search results to string and send response
-                    resp = "type | search ; item_count | " + searchResults.size() + " ; ";
-                    String title = "";
-                    String citation = "";
-                    String order_search;
+                        String[] array = (String[]) searchResults.toArray();
+                        Arrays.sort(array, new URL_Comparator(server_Storage));
 
-                    for (int i = 0; i < 10; i++) {
-                        order_search = array[i];
-                        try {
-                            Document doc = Jsoup.connect(order_search).get();
-                            title = doc.title();
-                            citation = doc.text().substring(0, 20);
-                        } catch (Exception e) {
-                            continue;
+                        //convert search results to string and send response
+                        resp = "type | search ; item_count | " + searchResults.size() + " ; ";
+                        String title = "";
+                        String citation = "";
+                        String order_search;
+
+                        for (int i = 0; i < 10; i++) {
+                            order_search = array[i];
+                            try {
+                                Document doc = Jsoup.connect(order_search).get();
+                                title = doc.title();
+                                citation = doc.text().substring(0, 20);
+                            } catch (Exception e) {
+                                continue;
+                            }
+                            resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
                         }
-                        resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
+                        this.response = resp;
+
+                        break;
+
+
                     }
-                    this.response = resp;
-
-                    break;
-
-
                 case "give_privilege":
                     username = data[0].replace("username | ", "");
 
