@@ -29,6 +29,7 @@ public class MulticastServer extends Thread{
     public  MulticastServer(String configFile){
 
         super("Server is Running");
+
         try {
             FileHandler fileHandler = new FileHandler();
         } catch (IOException e) {
@@ -38,15 +39,19 @@ public class MulticastServer extends Thread{
         this.port = st.getServerConfig().getPort();
         this.multicast_address = st.getServerConfig().getAddress();
         this.server_id = st.getServerConfig().getServer_ID();
-
         KeepAlive ping = new KeepAlive(st);
         ping.start();
+
     }
 
 
     public void run(){
 
         MulticastSocket socket = null;
+        TCP_Server server = new TCP_Server(st, st.getServerConfig().getTcp_port());
+
+        WebCrawler wc = new WebCrawler(st);
+        ManageRequests mr = new ManageRequests(st);
         try{
             socket = new MulticastSocket(port);
             InetAddress group = InetAddress.getByName(multicast_address);
@@ -54,23 +59,26 @@ public class MulticastServer extends Thread{
             //socket.setLoopbackMode(false);
 
             while(true){
-                byte[] socketBuffer = new byte[8];
+                byte[] socketBuffer = new byte[10000];
                 DatagramPacket packet = new DatagramPacket(socketBuffer, socketBuffer.length);
                 socket.receive(packet);
-
-                String message = new String(packet.getData(), 0, packet.getLength());
-                int length = Integer.parseInt(message.trim());
-                socketBuffer = new byte[length];
-                packet = new DatagramPacket(socketBuffer, length);
-                socket.receive(packet);
-
-                byte[] data = packet.getData();
-                String s = new String(data,0,data.length);
-                System.out.println(s);
+                socket.setLoopbackMode(false);
+                String request = new String(packet.getData(), 0, packet.getLength());
+                request = request.trim();
+//                socketBuffer = new byte[length];
+//                packet = new DatagramPacket(socketBuffer, length);
+//                socket.receive(packet);
+//
+//                byte[] data = packet.getData();
+//                String s = new String(data,0,data.length);
+//                System.out.println(request);
+                System.out.println("recieved request");
+                st.addRequestToQueue(request);
 
                 //chamar manage requests aqui
-                //System.out.println("Port " + packet.getPort() + " on " + packet.getAddress().getHostAddress() +" sent this message:" + s);
-                ManageRequests mr = new ManageRequests(st, s);
+               //fazer uma queue de requests
+
+
 
             }
 
@@ -95,7 +103,7 @@ class Storage{
     private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceIndex_changes;
 
     private CopyOnWriteArrayList<User> users;
-    private CopyOnWriteArrayList<String> responses;
+    private CopyOnWriteArrayList<String> requestQueue;
     private CopyOnWriteArrayList<User> onlineUsers;
 
     private CopyOnWriteArrayList<ServerConfig> onlineServers;
@@ -114,6 +122,7 @@ class Storage{
         this.referenceIndex_changes = new ConcurrentHashMap<>();
         this.onlineServers = new CopyOnWriteArrayList<>();
         this.onlineUsers = new CopyOnWriteArrayList<>();
+        this.requestQueue = new CopyOnWriteArrayList<>();
         fillInfo();
 
     }
@@ -138,6 +147,11 @@ class Storage{
         linkList.add(ws);
         notify();
     }
+    public synchronized void addRequestToQueue(String ws){
+        requestQueue.add(ws);
+        notify();
+    }
+
 
     // add a word to hashmap
     public void addWordToHash(String word, String ws){
@@ -212,6 +226,20 @@ class Storage{
         return users;
     }
 
+    public synchronized String getRequest(){
+        while(requestQueue.isEmpty()){
+            try{
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        String ws = requestQueue.get(0);
+        requestQueue.remove(0);
+        return ws;
+    }
     public synchronized String getLink(){
         while(linkList.isEmpty()){
             try{
@@ -223,7 +251,6 @@ class Storage{
         }
         String ws = linkList.get(0);
         linkList.remove(0);
-        System.out.println("removed");
         return ws;
     }
 
@@ -249,6 +276,14 @@ class Storage{
 
     public void addOnlineServer(ServerConfig s){
         onlineServers.add(s);
+    }
+
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getSearchUpdates(){
+        return searchIndex_changes;
+    }
+
+    public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getReferenceUpdates() {
+        return referenceIndex_changes;
     }
 
     public void updateFiles(){
@@ -280,18 +315,18 @@ class KeepAlive extends Thread{
 
                 String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~hostname "+ st.getServerConfig().getHostname() + "~TCPport "+ st.getServerConfig().getTcp_port()+"~workload " + st.getServerConfig().getWorkload();
 
-                String length = "" + message.length();
-                byte[] buffer = length.getBytes();
+                //String length = "" + message.length();
+                byte[] buffer =message.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
                 socket.send(packet);
 
 
-                buffer = message.getBytes();
-                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
+//                buffer = message.getBytes();
+//                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
                 System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
-                socket.send(packet);
+//                socket.send(packet);
                 try{
-                    this.sleep(30000);
+                    this.sleep(10000);
                     //clear online servers list
 
                 }catch(InterruptedException e){}

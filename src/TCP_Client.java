@@ -3,40 +3,39 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class TCP_Client {
+    Storage st;
     String host;
-    public TCP_Client (String hostname, int port, Storage st) {
-        //this.host = address;
+    String message;
+    public TCP_Client (Storage st,String hostname, int port, String message) {
+        this.st = st;
         this.host = hostname;
-
+        System.out.println("tcp client criado");
+        this.message = message;
         Socket s = null;
         int serversocket = port;
+
         try {
             // 1o passo
             s = new Socket(host,serversocket);
 
-            System.out.println("SOCKET=" + s);
+//            System.out.println("SOCKET=" + s);
             // 2o passo
-            //DataInputStream in = new DataInputStream(s.getInputStream());
+//            DataInputStream in = new DataInputStream(s.getInputStream());
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            out.writeUTF("message");
 
-            String texto = "";
-            InputStreamReader input = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(input);
-            System.out.println("Introduza texto:");
-            ReadAnswer t = new ReadAnswer(s);
-            /*while (true) {
-                // READ STRING FROM KEYBOARD
-
-                try {
-                    texto = reader.readLine();
-                } catch (Exception e) {
-                }
-                // WRITE INTO THE SOCKET
-                out.writeUTF(texto);
+//            InputStreamReader input = new InputStreamReader(System.in);
+//            BufferedReader reader = new BufferedReader(input);
+//            System.out.println("Introduza texto:");
+//            ReadAnswer t = new ReadAnswer(s);
+            try {
+                s.close();
+                System.out.println("closed socket");
+            } catch (IOException e) {
+                System.out.println("close:" + e.getMessage());
             }
-            // 3o passo
-    */
         } catch (UnknownHostException e) {
+            //remove host from online servers list
             System.out.println("Sock:" + e.getMessage());
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
@@ -46,6 +45,7 @@ public class TCP_Client {
             if (s != null)
                 try {
                     s.close();
+                    System.out.println("closed socket");
                 } catch (IOException e) {
                     System.out.println("close:" + e.getMessage());
                 }
@@ -53,36 +53,4 @@ public class TCP_Client {
     }
 }
 
-class ReadAnswer extends Thread{
-    DataInputStream in;
-    //DataOutputStream out;
-    Socket s;
-    public ReadAnswer(Socket s){
-        this.s = s;
-        try {
-            in = new DataInputStream(s.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        this.start();
-    }
-
-    //alterar para esta funcao poder atualizar os dados dos hash maps e das
-    public void run(){
-
-        // READ FROM SOCKET
-        String data = null;
-        try {
-            data = in.readUTF();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        // DISPLAY WHAT WAS READ
-        System.out.println("Received: " + data);
-
-        //parse the data and update hashmaps
-    }
-}
 

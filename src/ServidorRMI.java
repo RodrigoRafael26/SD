@@ -15,6 +15,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private boolean[] servers = {false, false};
     int replyServer = 0;
     private static ServerInterface serverInterface;
+    //passar parametros multicast por parametro / file
     private String MULTICAST_ADDRESS = "224.0.224.0";
     private int PORT = 4320;
     private String name = "RMIServer";
@@ -141,36 +142,38 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.joinGroup(group);
                 socket.setLoopbackMode(false);
 
-//              Envia para multicast o tamanha do buffer
-                String length = "" + request.length();
-                byte[] buffer = length.getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-                socket.send(packet);
+////              Envia para multicast o tamanha do buffer
+//                String length = "" + request.length();
+//                byte[] buffer = length.getBytes();
+//                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
+//                socket.send(packet);
 
                 try {
                    Thread.sleep(1000);
                 } catch (InterruptedException e) {}
 
 //              envia para multicast o request
+                byte[] buffer = request.getBytes();
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 buffer = request.getBytes();
                 packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
                 System.out.println("Sent to multicast address: " + request);
 
 
-                buffer = new byte[8];
+                buffer = new byte[10000];
                 packet = new DatagramPacket(buffer, buffer.length);
                 socket = new MulticastSocket(4324);
                 socket.joinGroup(group);
                 //socket.setSoTimeout(5000);
                 socket.receive(packet);
 
-//                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
-                message = new String(packet.getData(), 0, packet.getLength());
-                int bufferLength = Integer.parseInt(message.trim());
-                buffer = new byte[bufferLength];
-                packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+////                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
+//                message = new String(packet.getData(), 0, packet.getLength());
+//                int bufferLength = Integer.parseInt(message.trim());
+//                buffer = new byte[bufferLength];
+//                packet = new DatagramPacket(buffer, buffer.length);
+//                socket.receive(packet);
 
                 message = new String(packet.getData(), 0, packet.getLength());
                 System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
@@ -328,7 +331,10 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         System.out.println(client.getUser() + " na lista de clientes");
         clientsList.add(client);
 
+
+
         String resposta = dealWithRequest("type | get_notifications ; username | " + client.getUser());
+        System.out.println(resposta);
         String[] tokens = resposta.split(" ; ");
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
         String[][] aux = new String[tokens.length-2][];

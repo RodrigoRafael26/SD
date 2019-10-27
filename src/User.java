@@ -45,10 +45,8 @@ class User implements Serializable {
     }
 
     public CopyOnWriteArrayList<String> getNotifications (){
-        if(notifications.isEmpty()){
-            return null;
-        }else{
-            return notifications;
-        }
+
+        return notifications;
+
     }
 }
