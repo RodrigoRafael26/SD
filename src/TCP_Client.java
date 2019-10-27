@@ -2,87 +2,64 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class TCP_Client {
-    String host;
-    public TCP_Client (String address, int port, Storage st) {
-        //passar o ip do host no config file?
-        this.host = address;
-
+public class TCP_Client extends Thread{
+    private Storage st;
+    private String host;
+    private String message;
+    private int serversocket;
+    private Socket s;
+    public TCP_Client (Storage st,String hostname, int port, String message) {
+        this.st = st;
+        this.host = hostname;
+        this.message = message;
         Socket s = null;
-        int serversocket = port;
+
+        this.serversocket = port;
+        this.start();
+
+
+    }
+    public void run(){
         try {
             // 1o passo
             s = new Socket(host,serversocket);
 
-            System.out.println("SOCKET=" + s);
+//            System.out.println("SOCKET=" + s);
             // 2o passo
-            //DataInputStream in = new DataInputStream(s.getInputStream());
+//            DataInputStream in = new DataInputStream(s.getInputStream());
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            out.writeUTF("message");
 
-            String texto = "";
-            InputStreamReader input = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(input);
-            System.out.println("Introduza texto:");
-            ReadAnswer t = new ReadAnswer(s);
-            while (true) {
-                // READ STRING FROM KEYBOARD
-
-                try {
-                    texto = reader.readLine();
-                } catch (Exception e) {
-                }
-                // WRITE INTO THE SOCKET
-                out.writeUTF(texto);
+//            InputStreamReader input = new InputStreamReader(System.in);
+//            BufferedReader reader = new BufferedReader(input);
+//            System.out.println("Introduza texto:");
+//            ReadAnswer t = new ReadAnswer(s);
+            try {
+                this.sleep(100);
+                s.close();
+                System.out.println("closed socket");
+            } catch (IOException e) {
+                System.out.println("close:" + e.getMessage());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            // 3o passo
-
         } catch (UnknownHostException e) {
+            //remove host from online servers list
             System.out.println("Sock:" + e.getMessage());
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO:" + e.getMessage());
         } finally {
-            if (s != null)
-                try {
-                    s.close();
-                } catch (IOException e) {
-                    System.out.println("close:" + e.getMessage());
-                }
+//            if (s != null)
+//                try {
+//                    s.close();
+//                    System.out.println("closed socket");
+//                } catch (IOException e) {
+//                    System.out.println("close:" + e.getMessage());
+//                }
         }
     }
 }
 
-class ReadAnswer extends Thread{
-    DataInputStream in;
-    //DataOutputStream out;
-    Socket s;
-    public ReadAnswer(Socket s){
-        this.s = s;
-        try {
-            in = new DataInputStream(s.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        this.start();
-    }
-
-    //alterar para esta funcao poder atualizar os dados dos hash maps e das
-    public void run(){
-
-        // READ FROM SOCKET
-        String data = null;
-        try {
-            data = in.readUTF();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        // DISPLAY WHAT WAS READ
-        System.out.println("Received: " + data);
-
-        //parse the data and update hashmaps
-    }
-}
 

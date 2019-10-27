@@ -6,13 +6,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class TCP_Server {
-    Storage st;
-    public TCP_Server(Storage st){
+public class TCP_Server extends Thread{
+    private Storage st;
+    private int serverPort;
+    public TCP_Server(Storage st, int tcp_port){
         this.st = st;
+        this.serverPort = tcp_port;
+        this.start();
+    }
+    public void run(){
+        System.out.println("started tcp server");
         try{
-            int serverPort = 6000; // de onde vem este server Port?
-
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
             CopyOnWriteArrayList<Socket> socketList = new CopyOnWriteArrayList<Socket>();
@@ -29,12 +33,10 @@ public class TCP_Server {
     }
 
 }
-
+//TCP server only recieves information and updates server Storage
 class Connection extends Thread{
     DataInputStream in;
-    DataOutputStream out;
     Socket clientSocket;
-    int thread_number;
     CopyOnWriteArrayList<Socket> socketList;
 
     public Connection (Socket aClientSocket, CopyOnWriteArrayList<Socket> socketList) {
@@ -42,29 +44,35 @@ class Connection extends Thread{
 
         try{
             clientSocket = aClientSocket;
-            in = new DataInputStream(clientSocket.getInputStream()); //isto é para mudar
-            //out = new DataOutputStream(clientSocket.getOutputStream());
+            in = new DataInputStream(clientSocket.getInputStream());
+
             this.start();
         }catch(IOException e){System.out.println("Connection:" + e.getMessage());}
     }
-    //=============================
+
+
+
     public void run(){
 
-        String resposta;
         try{
-            while(true){
 
+                System.out.println("chegou aqui/ socketList size: " +socketList.size());
                 int i = 0;
                 for (Socket clientSocket: socketList) {
-                    //make response hashmaps changes and workload if needed
-                    resposta = "";
-                    out = new DataOutputStream(clientSocket.getOutputStream());
-                    out.writeUTF(resposta);
+                    //update hashmaps and recieve workload if needed
+                    in = new DataInputStream(clientSocket.getInputStream());
+                    //out.writeUTF(resposta);
+                    String synchro = in.readUTF();
+
+                    System.out.println(synchro);
                 }
+                socketList.clear();
+                System.out.println("saiu do for");
 
 
-            }
+
         }catch(EOFException e){
+            e.getMessage();
             System.out.println("EOF:" + e);
         }catch(IOException e){
             System.out.println("IO:" + e);
