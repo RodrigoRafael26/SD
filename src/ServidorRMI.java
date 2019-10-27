@@ -130,7 +130,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     private String dealWithRequest(String request) {
         MulticastSocket socket = null;
-        String tipo_request = request.split(" ; ")[0].split(" \\| ")[1];
         String message = "";
         int count = 0;
 
