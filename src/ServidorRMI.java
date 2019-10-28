@@ -8,7 +8,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
@@ -338,20 +337,19 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
         System.out.println(client.getUser() + " na lista de clientes");
         clientsList.add(client);
+    }
 
-
-
-        String resposta = dealWithRequest("type | get_notifications ; username | " + client.getUser());
-        System.out.println(resposta);
-        String[] tokens = resposta.split(" ; ");
+    public String verifyNotification(String username) {
+        String answer = dealWithRequest("type | get_notifications ; username | " + username);
+        String[] tokens = answer.split(" ; ");
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
         String[][] aux = new String[tokens.length-2][];
-        if(size > 0) {
-            for (i = 2; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
+        if (size == 0){
+            return "No notifications";
         }
-        for (i = 0; i < aux.length; i++) {
-            sendNotification(aux[i][1], client.getUser());
-        }
+        for (i = 2; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
+        for (i = 0; i < aux.length; i++) sendNotification(aux[i][1], username);
+        return answer;
     }
 
 //    caso o user nao esteja online
