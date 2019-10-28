@@ -107,6 +107,7 @@ class Storage{
     private CopyOnWriteArrayList<User> users;
     private CopyOnWriteArrayList<String> requestQueue;
     private CopyOnWriteArrayList<User> onlineUsers;
+    private CopyOnWriteArrayList<String> shareUrls;
 
     private CopyOnWriteArrayList<ServerConfig> onlineServers;
     private CopyOnWriteArrayList<String> linkList;
@@ -306,6 +307,10 @@ class Storage{
 
     public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getReferenceUpdates() {
         return referenceIndex_changes;
+    }
+
+    public CopyOnWriteArrayList<String> getShareUrls(){
+        return shareUrls;
     }
 
     public void updateFiles(){

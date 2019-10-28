@@ -2,16 +2,17 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class TCP_Client extends Thread{
+public class ShareInfo extends Thread{
     private Storage st;
     private String host;
-    private String message;
+
     private int serversocket;
     private Socket s;
-    public TCP_Client (Storage st,String hostname, int port, String message) {
+
+    public ShareInfo (Storage st,String hostname, int port) {
         this.st = st;
         this.host = hostname;
-        this.message = message;
+
         Socket s = null;
 
         this.serversocket = port;
@@ -24,11 +25,14 @@ public class TCP_Client extends Thread{
             // 1o passo
             s = new Socket(host,serversocket);
 
-//            System.out.println("SOCKET=" + s);
-            // 2o passo
 //            DataInputStream in = new DataInputStream(s.getInputStream());
-            DataOutputStream out = new DataOutputStream(s.getOutputStream());
-            out.writeUTF("message");
+            ObjectOutputStream os = new ObjectOutputStream(s.getOutputStream());
+            ObjectInputStream is = new ObjectInputStream(s.getInputStream());
+
+            //send search differences
+            os.writeObject(st.getSearchUpdates());
+            os.writeObject(st.getReferenceUpdates());
+            os.writeObject(st.getShareUrls());
 
 //            InputStreamReader input = new InputStreamReader(System.in);
 //            BufferedReader reader = new BufferedReader(input);
@@ -37,7 +41,6 @@ public class TCP_Client extends Thread{
             try {
                 this.sleep(100);
                 s.close();
-                System.out.println("closed socket");
             } catch (IOException e) {
                 System.out.println("close:" + e.getMessage());
             } catch (InterruptedException e) {
@@ -50,15 +53,8 @@ public class TCP_Client extends Thread{
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO:" + e.getMessage());
-        } finally {
-//            if (s != null)
-//                try {
-//                    s.close();
-//                    System.out.println("closed socket");
-//                } catch (IOException e) {
-//                    System.out.println("close:" + e.getMessage());
-//                }
         }
+
     }
 }
 

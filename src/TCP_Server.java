@@ -1,14 +1,13 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TCP_Server extends Thread{
     private Storage st;
     private int serverPort;
+
     public TCP_Server(Storage st, int tcp_port){
         this.st = st;
         this.serverPort = tcp_port;
@@ -36,11 +35,18 @@ public class TCP_Server extends Thread{
 //TCP server only recieves information and updates server Storage
 class Connection extends Thread{
     DataInputStream in;
+    Storage st;
     Socket clientSocket;
     CopyOnWriteArrayList<Socket> socketList;
+    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> addSearch;
+    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> addReference;
+    CopyOnWriteArrayList<String> addLinks;
 
     public Connection (Socket aClientSocket, CopyOnWriteArrayList<Socket> socketList) {
         this.socketList = socketList;
+        this.addSearch = new ConcurrentHashMap<>();
+        this.addReference = new ConcurrentHashMap<>();
+        this.addLinks = new CopyOnWriteArrayList<>();
 
         try{
             clientSocket = aClientSocket;
@@ -54,21 +60,25 @@ class Connection extends Thread{
 
     public void run(){
 
+
         try{
 
-                System.out.println("chegou aqui/ socketList size: " +socketList.size());
-                int i = 0;
-                for (Socket clientSocket: socketList) {
-                    //update hashmaps and recieve workload if needed
-                    in = new DataInputStream(clientSocket.getInputStream());
-                    //out.writeUTF(resposta);
-                    String synchro = in.readUTF();
+            System.out.println("chegou aqui/ socketList size: " +socketList.size());
+            int i = 0;
+            for (Socket clientSocket: socketList) {
+                DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
+                ObjectOutputStream os = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream is = new ObjectInputStream(clientSocket.getInputStream());
 
-                    System.out.println(synchro);
-                }
-                socketList.clear();
-                System.out.println("saiu do for");
+                //posso escrever respostas entre cada um
+                addSearch = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) is.readObject();
+                addReference = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) is.readObject();
+                addLinks = (CopyOnWriteArrayList<String>) is.readObject();
 
+                Merge merge = new Merge(st,addSearch, addReference, addLinks);
+
+            }
+            socketList.clear();
 
 
         }catch(EOFException e){
@@ -76,6 +86,65 @@ class Connection extends Thread{
             System.out.println("EOF:" + e);
         }catch(IOException e){
             System.out.println("IO:" + e);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
+}
+
+class Merge extends Thread{
+    Storage st;
+    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> search;
+    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> references;
+    CopyOnWriteArrayList<String> links;
+    public Merge(Storage st, ConcurrentHashMap<String, CopyOnWriteArrayList<String>> search, ConcurrentHashMap<String, CopyOnWriteArrayList<String>>references, CopyOnWriteArrayList<String> links){
+        this.st = st;
+        this.search = search;
+        this.references = references;
+        this.links = links;
+    }
+
+    public void run(){
+        //merge searchList
+        //go through all words that were changed in the other server
+        for(String s: search.keySet()){
+            //if this server already has that word
+            if(st.getSearchHash().keySet().contains(s)){
+                for(String temp : search.get(s)){
+                    //check if the references on updates sent by the other server are already in this server hash
+                    if(!st.getSearchHash().get(s).contains(temp)){
+                        //if not add them
+                        st.getSearchHash().get(s).add(temp);
+                    }
+                }
+            }else{
+                //if the server doesnt have the words yet add the entire hash row
+                st.getSearchHash().put(s,search.get(s));
+            }
+        }
+
+        //merge references
+        //go through all urls that were changed in the other server
+        for(String s: references.keySet()){
+            //if this server already has that url
+            if(st.getReferenceHash().keySet().contains(s)){
+                for(String temp : references.get(s)){
+                    //check if the references on updates sent by the other server are already in this server hash
+                    if(!st.getReferenceHash().get(s).contains(temp)){
+                        //if not add them
+                        st.getReferenceHash().get(s).add(temp);
+                    }
+                }
+            }else{
+                //if the server doesnt have the url yet add the entire hash row
+                st.getReferenceHash().put(s,references.get(s));
+            }
+        }
+
+        //add all the new URLs to queue so they can be indexed
+        for(String url : links){
+            st.addLinkToQueue(url);
+        }
+    }
+
 }
