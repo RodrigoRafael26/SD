@@ -64,7 +64,7 @@ class Connection extends Thread{
         try{
 
             System.out.println("chegou aqui/ socketList size: " +socketList.size());
-            int i = 0;
+
             for (Socket clientSocket: socketList) {
                 DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
                 ObjectOutputStream os = new ObjectOutputStream(clientSocket.getOutputStream());

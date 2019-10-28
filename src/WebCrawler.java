@@ -128,13 +128,9 @@ public class WebCrawler extends Thread{
 
         // Display words and counts
         for (String word : countMap.keySet()) {
-            if (word.length() >= 3) { // Shall we ignore small words?
-                //System.out.println(word + "\t" + countMap.get(word));
 
                 st.addWordToHash(word, ws);
 
-
-            }
         }
     }
 

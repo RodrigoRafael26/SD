@@ -58,6 +58,7 @@ public class MulticastServer extends Thread{
         UpdateServers us = new UpdateServers(st);
         try{
             socket = new MulticastSocket(port);
+            System.out.println(multicast_address);
             InetAddress group = InetAddress.getByName(multicast_address);
             socket.joinGroup(group);
             //socket.setLoopbackMode(false);
@@ -116,6 +117,7 @@ class Storage{
         this.onlineServers = new CopyOnWriteArrayList<>();
         this.onlineUsers = new CopyOnWriteArrayList<>();
         this.requestQueue = new CopyOnWriteArrayList<>();
+        this.shareUrls = new CopyOnWriteArrayList<>();
         fillInfo();
 
     }
@@ -323,9 +325,11 @@ class Storage{
 
 class KeepAlive extends Thread{
     private Storage st;
+    private int counter;
     public KeepAlive(Storage st){
         //send keepAlives to multicast group
         this.st = st;
+        this.counter = 0;
     }
 
     public void run(){
@@ -346,8 +350,10 @@ class KeepAlive extends Thread{
                 byte[] buffer =message.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
                 socket.send(packet);
-
-
+                counter ++;
+                if(counter == 60){
+                    st.updateFiles();
+                }
 //                buffer = message.getBytes();
 //                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
 //                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
