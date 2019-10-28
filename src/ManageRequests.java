@@ -321,11 +321,11 @@ public class ManageRequests extends Thread {
                     username = data[0].replace("username | ", "");
                     User user = server_Storage.getUser(username);
 
-                    String notifications = "type | notifications ; item_count | " + user.getNotifications().size() + " ;";
+                    String notifications = "type | notifications ; item_count | " + user.getNotifications().size();
                     if (user.getNotifications() != null) {
 
                         for (String temp : user.getNotifications()) {
-                            notifications += " item_name | " + temp + " ;";
+                            notifications += " ; item_name | " + temp;
                         }
                     }
 

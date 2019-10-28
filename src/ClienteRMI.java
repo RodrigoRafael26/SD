@@ -291,8 +291,10 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         boolean validation;
 
         while(true) {
+            System.out.println("0 to go back!");
             System.out.println("Username: ");
             username = sc.nextLine().replaceAll("^[,\\s]+", " ");
+            if (username.compareTo("0") == 0) break;
             if(username.contains(" ")) {
                 System.out.println("O username nao pode conter espaços");
                 continue;
@@ -302,6 +304,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             }
             System.out.println("\nPassword: ");
             password = sc.nextLine().replaceAll("^[,\\s]+", "");
+            if (password.compareTo("0") == 0) break;
             if(password.contains(" ")) {
                 System.out.println("A password nao pode conter espaços");
                 continue;
