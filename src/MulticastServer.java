@@ -117,6 +117,7 @@ class Storage{
         this.onlineServers = new CopyOnWriteArrayList<>();
         this.onlineUsers = new CopyOnWriteArrayList<>();
         this.requestQueue = new CopyOnWriteArrayList<>();
+        this.shareUrls = new CopyOnWriteArrayList<>();
         fillInfo();
 
     }

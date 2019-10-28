@@ -15,7 +15,7 @@ public class UpdateServers extends Thread {
 
             //create TCP Client connecting to every online server
             System.out.println("ONLINE SERVERS: " + server_Storage.getOnlineServers().size());
-            for (ServerConfig tempList :onlineServers) {
+            for (ServerConfig tempList : onlineServers) {
 
                 if (tempList.getServer_ID() != server_Storage.getServerConfig().getServer_ID()) {
 
