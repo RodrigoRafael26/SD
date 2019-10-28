@@ -277,6 +277,7 @@ class Storage{
     }
 
     public synchronized CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
+
         while (onlineServers.size()<2){
             try{
                 wait();

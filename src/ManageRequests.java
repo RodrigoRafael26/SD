@@ -1,13 +1,11 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ManageRequests extends Thread {
@@ -15,12 +13,14 @@ public class ManageRequests extends Thread {
     private String request;
     private String response;
     private String responseAddress;
+    private HashMap<String, Date> lastPingSent;
 
 
     public ManageRequests(Storage st) {
         this.server_Storage = st;
         this.request = request;
         this.responseAddress = st.getServerConfig().getAddress();
+        this.lastPingSent = new HashMap<>();
         this.start();
     }
 
@@ -50,25 +50,25 @@ public class ManageRequests extends Thread {
                     //create user
                     //System.out.println(username + "||"+password);
                     //do not allow duplicate users
-                    boolean isAdmin;
-                    int id;
+                    boolean isAdmin = false;
+                    int id = 1;
                     String resp;
                     if (server_Storage.getUserList().isEmpty()) {
                         isAdmin = true;
                         id = 1;
+                        resp = "type | status ; operation | success ; isAdmin | true" ;
 
                     } else {
                         if (server_Storage.getUser(username) != null) {
                             resp = "type | status ; operation | failed";
-                            break;
+
                         } else {
 
                             isAdmin = false;
                             id = server_Storage.getUserList().size() + 1;
+                            resp = "type | status ; operation | success ; isAdmin | false";
                         }
                     }
-
-                    response = "1";
 
                     User u = new User(username, password, isAdmin, id);
 
@@ -76,9 +76,8 @@ public class ManageRequests extends Thread {
 
                     server_Storage.addUser(u);
 
-                    resp = "type | status ; operation | success ; isAdmin | " + u.isAdmin();
                     this.response = resp;
-                    System.out.println("user added");
+
                     break;
 
                 case "login":
@@ -167,7 +166,8 @@ public class ManageRequests extends Thread {
 
                         if (temp == null){
                             opFailed = true;
-                            resp = "type | status ; operation | failed";
+                            resp = "type | search ; item_count | 0";
+                            response = resp;
                             break;
                         }
 
@@ -205,11 +205,8 @@ public class ManageRequests extends Thread {
                             resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
                         }
                         this.response = resp;
-
-                        break;
-
-
                     }
+                    break;
                 case "give_privilege":
                     username = data[0].replace("username | ", "");
 
@@ -324,7 +321,7 @@ public class ManageRequests extends Thread {
                     int tcp_port = Integer.parseInt(info[4].replace("TCPport ", ""));
 //                    System.out.println(server_id);
 
-
+                    String aux_id = ""+server_id;
                     ServerConfig temp_S = null;
                     try {
                         temp_S = new ServerConfig(server_port, address, tcp_port, server_id);
@@ -334,27 +331,30 @@ public class ManageRequests extends Thread {
                     temp_S.updateWorkload(Integer.parseInt(info[5].replace("workload ", "")));
 
                     //if server is already on list update information
-                    boolean serverIsOn = false;
+                    //boolean serverIsOn = false;
+                    Date date = new Date(System.currentTimeMillis());
 
-//                    for (ServerConfig server : server_Storage.getOnlineServers()) {
-//                        if (server.getServer_ID() == temp_S.getServer_ID()) serverIsOn = true;
-//                    }
+                    lastPingSent.put(aux_id, date);
+
+
                     if(temp_S.getServer_ID() != server_Storage.getServerConfig().getServer_ID() && !server_Storage.isServerOnline(temp_S)){
                         server_Storage.addOnlineServer(temp_S);
                     }
 
 
-//                    System.out.println("servers online " + server_Storage.getOnlineServers().size());
-
-                    //System.out.println("server is alive");
                     break;
 
                 case "getOnlineServer":
                     //this is for RMI server
                     resp = "type | getOnlineServer ; ";
+                    if(lastPingSent.keySet().size()==1){
+                        resp += "item_id | " + server_Storage.getServerConfig().getServer_ID() + " ; workload | " + server_Storage.getServerConfig().getWorkload() + " ; ";
 
-                    for (ServerConfig temp : server_Storage.getOnlineServers()) {
-                        resp += "item_id | " + temp.getServer_ID() + " ; workload | " + temp.getWorkload() + " ; ";
+                    }else{
+
+                        for (ServerConfig temp : server_Storage.getOnlineServers()) {
+                            resp += "item_id | " + temp.getServer_ID() + " ; workload | " + temp.getWorkload() + " ; ";
+                        }
                     }
                     break;
                 default:
@@ -369,20 +369,12 @@ public class ManageRequests extends Thread {
                 resp_socket = new MulticastSocket();
                 InetAddress group = InetAddress.getByName(responseAddress);
 
-    //            //send buffer length
-    //            String length = "" + response.length();
-    //            byte[] buffer = length.getBytes();
-    //            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
-    //            resp_socket.send(packet);
-
                 //send response
                 System.out.println(response);
                 byte[] buffer = response.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
-                packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
-    //            try{
-    //                Thread.sleep(100);
-    //            }catch (InterruptedException e){}
+                //packet = new DatagramPacket(buffer, buffer.length, group, resp_port);
+
                 resp_socket.send(packet);
 
 

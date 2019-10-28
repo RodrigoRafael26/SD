@@ -213,7 +213,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         request = "type | register ; username | " + username + " ; password | " + password;
         String resposta = dealWithRequest(request);
         if(resposta.equals("type | status ; operation | failed")) return 3;
-        else if (resposta.equals("type | status ; operation | succeeded ; isAdmin | true")) return 1;
+        else if (resposta.equals("type | status ; operation | success ; isAdmin | true")) return 1;
         else return 2;
     }
 
@@ -224,7 +224,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String resposta = dealWithRequest(request);
 
         if(resposta.equals("type | status ; operation | failed")) return 3;
-        else if (resposta.equals("type | status ; operation | succeeded ; isAdmin | true")) return 1;
+        else if (resposta.equals("type | status ; operation | success ; isAdmin | true")) return 1;
         else return 2;
     }
 

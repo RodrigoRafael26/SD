@@ -140,10 +140,10 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             // user sem login
             System.out.println("\t\tMAIN MENU\n");
-            System.out.println("\n\t1Pesquisa");
+            System.out.println("\n\t1) Pesquisa");
             if (perk <= 2) { //user normal
-                System.out.println("\n\t2)Consulta da lista de páginas com ligacao para uma página especifica");
-                System.out.println("\n\t3)Histórico");
+                System.out.println("\n\t2) Consulta da lista de páginas com ligacao para uma página especifica");
+                System.out.println("\n\t3) Histórico");
             }
             if (perk == 1) { // admin
                 System.out.println("\n\t4) 10 paginas mais importantes");
