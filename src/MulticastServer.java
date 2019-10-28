@@ -353,7 +353,7 @@ class KeepAlive extends Thread{
 //                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
 //                socket.send(packet);
                 try{
-                    this.sleep(10000);
+                    this.sleep(1000);
                     //clear online servers list
 
                 }catch(InterruptedException e){}

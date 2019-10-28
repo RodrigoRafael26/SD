@@ -109,7 +109,12 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             System.out.println("\n\t0) Exit");
 
             try {
-                option = Integer.parseInt(sc.nextLine().replaceAll("^[,\\s]+", ""));
+                try {
+                    option = Integer.parseInt(sc.nextLine().replaceAll("^[,\\s]+", ""));
+                } catch (NumberFormatException e) {
+                    System.out.println("I can only work with numbers bro!");
+                    continue;
+                }
                 if (option == 1 || option == 2) {
                     validationMenu(option);
                 }else if(option == 0) {
@@ -171,9 +176,9 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             }
             if (option == 1)
                 search();
-            else if (option == 2 && perk == 2)
+            else if (option == 2 && perk <= 2)
                 pagesList();
-            else if (option == 3 && perk == 2)
+            else if (option == 3 && perk <= 2)
                 verHistorico();
             else if (option == 4 && perk == 1)
                 tenMost(4);
@@ -227,7 +232,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static void verHistorico() {
         String resposta = null;
 
-        while(resposta != null) {
+        while(resposta == null) {
             try {
                 resposta = serverInterface.historic(user);
             } catch (RemoteException e) {
@@ -250,7 +255,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
         while(resposta == null){
             try {
-                resposta = serverInterface.searchWeb(keyword);
+                resposta = serverInterface.searchWeb(keyword, user);
             } catch (RemoteException e) {
                 retryRMIConnection();
             }
@@ -265,19 +270,9 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         boolean validation = false;
 
         while(!validation){
-            System.out.println("Formato: XXXXXX.extensao\nPor exemplo: google.com");
             System.out.println("\nURL: ");
             url = sc.nextLine();
-            if(url.contains(".")){
-                aux = url;
-                aux_int = url.length() - aux.replaceAll(".", "").length();
-                if(aux_int + 1 != url.length()) {
-                    System.out.println("Write in the right format please!");
-                    continue;
-                }else{
-                    validation = stringChecker(url);
-                }
-            }
+            validation = stringChecker(url);
         }
         while(resposta == null){
             try {
@@ -400,4 +395,5 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         System.out.println("NOTIFICACAO");
         System.out.println(message);
     }
+
 }
