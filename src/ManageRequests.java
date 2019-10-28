@@ -138,23 +138,27 @@ public class ManageRequests extends Thread {
                     break;
 
                 case "newURL":
-                    String newUrl = data[0].split(" ; id_server | ")[0].replace("url | ", "");
-                    String server_ID = data[0].split(" ; id_server | ")[1];
+                    String newUrl = data[0].split(" ; ")[0].replace("url | ", "");
+                    String server_ID = data[1].replace("id_server | ","");
+                    System.out.println(server_ID);
                     //add link to queue
                     if(Integer.parseInt(server_ID)!=server_Storage.getServerConfig().getServer_ID()){
                         //ignore request and dont send response
                         response = null;
                         break;
                     }
-                    server_Storage.addLinkToQueue(newUrl);
 
                     response = "type | status ; operation | success";
                     try {
                         Document doc = Jsoup.connect(newUrl).get();
                     } catch (Exception e) {
                         // mandar notificacao para o admin a dizer que o url nao esta disponivel
+                        System.out.println(e.getMessage());
+                        System.out.println(newUrl);
                         response = "type | status ; operation | failed";
+                        break;
                     }
+                    server_Storage.addLinkToQueue(newUrl);
                     break;
 
                 case "search":
@@ -196,17 +200,31 @@ public class ManageRequests extends Thread {
                         String title = "";
                         String citation = "";
                         String order_search;
+                        if(array.length >= 10){
 
-                        for (int i = 0; i < 10; i++) {
-                            order_search = array[i];
-                            try {
-                                Document doc = Jsoup.connect(order_search).get();
-                                title = doc.title();
-                                citation = doc.text().substring(0, 20);
-                            } catch (Exception e) {
-                                continue;
+                            for (int i = 0; i < 10; i++) {
+                                order_search = array[i];
+                                try {
+                                    Document doc = Jsoup.connect(order_search).get();
+                                    title = doc.title();
+                                    citation = doc.text().substring(0, 20);
+                                } catch (Exception e) {
+                                    continue;
+                                }
+                                resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
                             }
-                            resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
+                        }else {
+                            for (String search : array) {
+                                order_search = search;
+                                try {
+                                    Document doc = Jsoup.connect(order_search).get();
+                                    title = doc.title();
+                                    citation = doc.text().substring(0, 20);
+                                } catch (Exception e) {
+                                    continue;
+                                }
+                                resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
+                            }
                         }
                         this.response = resp;
                     }
@@ -220,8 +238,11 @@ public class ManageRequests extends Thread {
                         server_Storage.getUser(username).changeUserToAdmin();
                         //send message to admin saying operation successful
 
+                        resp = "type | status ; operation | success";
                         //send notification to user saying he is now an admin
-                        resp = "type | status ; operation | failed";
+                        String notification = "You are now an admin";
+                        server_Storage.getUser(username).addNotifications(notification);
+
                     } else {
                         //send message saying user doesnt exist
                         resp = "type | status ; operation | failed";
@@ -239,7 +260,7 @@ public class ManageRequests extends Thread {
 
                 case "10MostImportant":
                     //get all the indexed websites
-                    String[] mostImportant = (String[]) server_Storage.getReferenceHash().keySet().toArray();
+                    String[] mostImportant =  keySetToArray(server_Storage.getReferenceHash().keySet());
 
                     Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
 
@@ -257,7 +278,7 @@ public class ManageRequests extends Thread {
 
                     }
 
-
+                    response =resp;
                     //type | 10MostImportant ; item_name | url ; item_name | url ;
 
                     break;
@@ -278,7 +299,7 @@ public class ManageRequests extends Thread {
                         }
                     }
 
-                    String[] ordered_array = (String[]) termFrequency.keySet().toArray();
+                    String[] ordered_array = keySetToArray(termFrequency.keySet());
                     Arrays.sort(ordered_array, new terms_Comparator(termFrequency));
 
                     resp = "type | 10MostSearched ; ";
@@ -292,6 +313,7 @@ public class ManageRequests extends Thread {
                         }
                     }
 
+                    response = resp;
                     break;
 
                 case "get_notifications":
@@ -299,16 +321,17 @@ public class ManageRequests extends Thread {
                     username = data[0].replace("username | ", "");
                     User user = server_Storage.getUser(username);
 
-                    String notifications = "type | notifications ; item_count | " + user.getNotifications().size();
+                    String notifications = "type | notifications ; item_count | " + user.getNotifications().size() + " ;";
                     if (user.getNotifications() != null) {
 
                         for (String temp : user.getNotifications()) {
-                            notifications += "item_name | " + temp + " ; ";
+                            notifications += " item_name | " + temp + " ;";
                         }
                     }
 
                     //if information checks send notification
                     this.response = notifications;
+                    user.getNotifications().clear();
                     break;
 
                 case "keepAlive":
@@ -367,6 +390,7 @@ public class ManageRequests extends Thread {
                             resp += "item_id | " + temp.getServer_ID() + " ; workload | " + temp.getWorkload() + " ; ";
                         }
                     }
+                    response = resp;
                     break;
                 default:
             }
@@ -405,6 +429,17 @@ public class ManageRequests extends Thread {
 
     //auxiliar method to convert CopyOnWriteArrayList to string array
     private String[] listToArray(CopyOnWriteArrayList<String> list){
+        String[] array = new String[list.size()];
+        int i = 0;
+        for(String s : list){
+            array[i] = s;
+            i++;
+        }
+        return  array;
+
+    }
+    //auxiliar method to convert CopyOnWriteArrayList to string array
+    private String[] keySetToArray(Set<String> list){
         String[] array = new String[list.size()];
         int i = 0;
         for(String s : list){

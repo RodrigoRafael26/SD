@@ -43,7 +43,9 @@ class User implements Serializable {
     public CopyOnWriteArrayList<String> getSearchHistory (){
         return searchHistory;
     }
-
+    public void addNotifications(String s){
+        notifications.add(s);
+    }
     public CopyOnWriteArrayList<String> getNotifications (){
 
         return notifications;

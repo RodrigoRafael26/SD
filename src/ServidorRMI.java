@@ -101,17 +101,20 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
         int nrServers = (answer.split(" ; ").length - 1) / 2;
         String[] tokens = answer.split(" ; ");
-        String[][] aux = new String[tokens.length][2];
+        String[][] aux = new String[nrServers][2];
         int menor = -1;
         String id_server = null;
 
         for (i = 1; i <= nrServers; i++) {
-            aux[i][0] = tokens[2*i - 1].split(" \\| ")[1];
-            aux[i][1] = tokens[2*i].split(" \\| ")[1];
+            aux[i-1][0] = tokens[2*i - 1].split(" \\| ")[1];
+            aux[i-1][1] = tokens[2*i].split(" \\| ")[1];
         }
 
-        for(i = 0; i < nrServers; i++){
-            if (menor == -1) menor = Integer.parseInt(aux[i][1]);
+        for(i = 0; i < aux.length; i++){
+            if (menor == -1){
+                menor = Integer.parseInt(aux[i][1]);
+                id_server = aux[i][0];
+            }
             if(Integer.parseInt(aux[i][1]) < menor){
                 menor = Integer.parseInt(aux[i][1]);
                 id_server = aux[i][0];
@@ -286,9 +289,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String[][] aux = new String[tokens.length-1][];
         String ans = "";
 
-        for(int i = 1; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
-        for(i = 0; i < tokens.length; i++) ans += " " + aux[i][1] + " ;";
-
+        for(int i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
+        for(i = 0; i < aux.length; i++) ans += " " + aux[i][1] + " ;";
+        if (ans.length() == 0) return "No searches done";
         return ans;
     }
 
@@ -309,7 +312,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
         for(i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
         for(i = 0; i < aux.length; i++) ans += " " + aux[i][1] + " ;";
-
+        ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
 
@@ -382,7 +385,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         request = "type | give_privilege ; username | " + usernameFutureAdmin;
 
         String resposta = dealWithRequest(request);
-        if (resposta.equals("type | give_privilege ; operation | succeeded")) {
+        if (resposta.equals("type | status ; operation | success")) {
             String message = "You are admin now!";
             sendNotification(message, usernameFutureAdmin);
             return true;
