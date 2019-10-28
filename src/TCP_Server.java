@@ -23,7 +23,7 @@ public class TCP_Server extends Thread{
                 Socket clientSocket = listenSocket.accept(); // BLOQUEANTE
                 System.out.println("CLIENT_SOCKET (created at accept())="+clientSocket);
                 socketList.add(clientSocket);
-                new Connection(clientSocket, socketList);
+                new Connection(st,clientSocket, socketList);
 
             }
         }catch(IOException e) {
@@ -42,11 +42,12 @@ class Connection extends Thread{
     ConcurrentHashMap<String, CopyOnWriteArrayList<String>> addReference;
     CopyOnWriteArrayList<String> addLinks;
 
-    public Connection (Socket aClientSocket, CopyOnWriteArrayList<Socket> socketList) {
+    public Connection (Storage st,Socket aClientSocket, CopyOnWriteArrayList<Socket> socketList) {
         this.socketList = socketList;
         this.addSearch = new ConcurrentHashMap<>();
         this.addReference = new ConcurrentHashMap<>();
         this.addLinks = new CopyOnWriteArrayList<>();
+        this.st = st;
 
         try{
             clientSocket = aClientSocket;
@@ -79,9 +80,10 @@ class Connection extends Thread{
                 System.out.println("REFERENCE UPDATES: "+ addReference.toString());
                 System.out.println("Link Updates: " + addLinks.toString());
 
-                Merge merge = new Merge(st,addSearch, addReference, addLinks);
+               this.merge();
 
             }
+            System.out.println("TERMINA O FOR");
             socketList.clear();
 
 
@@ -94,27 +96,13 @@ class Connection extends Thread{
             e.printStackTrace();
         }
     }
-}
-
-class Merge extends Thread{
-    Storage st;
-    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> search;
-    ConcurrentHashMap<String, CopyOnWriteArrayList<String>> references;
-    CopyOnWriteArrayList<String> links;
-    public Merge(Storage st, ConcurrentHashMap<String, CopyOnWriteArrayList<String>> search, ConcurrentHashMap<String, CopyOnWriteArrayList<String>>references, CopyOnWriteArrayList<String> links){
-        this.st = st;
-        this.search = search;
-        this.references = references;
-        this.links = links;
-    }
-
-    public void run(){
+    public void merge(){
         //merge searchList
         //go through all words that were changed in the other server
-        for(String s: search.keySet()){
+        for(String s: addSearch.keySet()){
             //if this server already has that word
             if(st.getSearchHash().keySet().contains(s)){
-                for(String temp : search.get(s)){
+                for(String temp : addSearch.get(s)){
                     //check if the references on updates sent by the other server are already in this server hash
                     if(!st.getSearchHash().get(s).contains(temp)){
                         //if not add them
@@ -123,16 +111,16 @@ class Merge extends Thread{
                 }
             }else{
                 //if the server doesnt have the words yet add the entire hash row
-                st.getSearchHash().put(s,search.get(s));
+                st.getSearchHash().put(s,addSearch.get(s));
             }
         }
 
         //merge references
         //go through all urls that were changed in the other server
-        for(String s: references.keySet()){
+        for(String s: addReference.keySet()){
             //if this server already has that url
             if(st.getReferenceHash().keySet().contains(s)){
-                for(String temp : references.get(s)){
+                for(String temp : addReference.get(s)){
                     //check if the references on updates sent by the other server are already in this server hash
                     if(!st.getReferenceHash().get(s).contains(temp)){
                         //if not add them
@@ -141,17 +129,19 @@ class Merge extends Thread{
                 }
             }else{
                 //if the server doesnt have the url yet add the entire hash row
-                st.getReferenceHash().put(s,references.get(s));
+                st.getReferenceHash().put(s,addReference.get(s));
             }
         }
 
         //add all the new URLs to queue so they can be indexed
-        for(String url : links){
+        for(String url : addLinks){
             st.addLinkToQueue(url);
         }
 
         //after all updates save server status
         st.updateFiles();
     }
-
 }
+
+
+
