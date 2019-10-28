@@ -159,14 +159,15 @@ public class ManageRequests extends Thread {
 
                 case "search":
                     //get all the search terms
-                    String[] seachTerms = data[0].replace("text | ", "").split(" ");
-
+                    username = data[0].replace("username | ", "");
+                    String[] seachTerms = data[1].replace("text | ", "").split(" ");
+                    String pesquisa ="";
                     CopyOnWriteArrayList<String> searchResults = server_Storage.getSearchHash().get(seachTerms[0]);
                     boolean opFailed = false;
                     for (String s : seachTerms) {
                         CopyOnWriteArrayList<String> merged = new CopyOnWriteArrayList<>();
                         CopyOnWriteArrayList<String> temp = server_Storage.getSearchHash().get(s);
-
+                        pesquisa += s +" ";
                         if (temp == null){
                             opFailed = true;
                             resp = "type | search ; item_count | 0";
@@ -186,7 +187,7 @@ public class ManageRequests extends Thread {
 
                     //order search results
                     if(!opFailed) {
-
+                        if(username.compareTo("null")!=0) server_Storage.getUser(username).addToHist(pesquisa);
                         String[] array = listToArray(searchResults);
                         Arrays.sort(array, new URL_Comparator(server_Storage));
 

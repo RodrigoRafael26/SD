@@ -14,7 +14,7 @@ public interface ServerInterface extends Remote {
     public String tenMostImportant() throws java.rmi.RemoteException;
     public String tenMostSearched() throws java.rmi.RemoteException;
     public boolean givePrivileges(String username, String username1) throws java.rmi.RemoteException;
-    public String searchWeb(String keyword) throws java.rmi.RemoteException;
+    public String searchWeb(String keyword, String username) throws java.rmi.RemoteException;
     public void newClient(int port, String myHost) throws java.rmi.RemoteException;
     public void ping() throws java.rmi.RemoteException;
     public String newURL(String url) throws java.rmi.RemoteException;

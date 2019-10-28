@@ -233,14 +233,18 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public String historic(String user) throws RemoteException {
         request = "type | historico ; username | " + user;
         String resposta = dealWithRequest(request);
+        String[][] aux = null;
 
-        String tokens[] = resposta.split(" ; ");
-        String aux[][] = new String[tokens.length-2][];
-        String ans = "";
+        String[] tokens = resposta.split(" ; ");
+        if (tokens.length > 1){
+            aux = new String[tokens.length-1][];
+            String ans = "";
 
-        for(int i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
-        for(i = 0; i < tokens.length - 1; i++) ans += aux[i][1] + "\n";
-        return ans;
+            for(i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
+            for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
+            return ans;
+        }
+        return "Your historic is clear";
     }
 
 //    1 - envia type | url_references ; url | url
@@ -249,13 +253,15 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         request = "type | url_references ; url | " + url;
         String resposta = dealWithRequest(request);
 
+        if (resposta.compareTo("type | status ; operation | failed") == 0) return "Any result for " + url;
+
         String[] tokens = resposta.split(" ; ");
         String[][] aux = new String[tokens.length][];
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
         String list = null;
 
-        for(int i = 2; i < size; i++) aux[i - 1] = tokens[i].split(" \\| ");
-        for(i = 0; i < tokens.length; i++) list += " " + aux[i][1] + " ;";
+        for(int i = 2; i < size; i++) aux[i - 2] = tokens[i].split(" \\| ");
+        for(i = 0; i < aux.length; i++) list += " " + aux[i][1] + " ;";
 
         return list;
     }
@@ -288,12 +294,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
 //    1 - envia type | search ; text | text
 //    2 - recebe type | search ; item_count | 13241 ; url | adad
-    public String searchWeb(String searchText) throws RemoteException {
-        request = "type | search ; text | " + searchText;
+    public String searchWeb(String searchText, String username) throws RemoteException {
+        request = "type | search ; username | "+ username +" ; text | " + searchText;
         String resposta = dealWithRequest(request);
 
         String[] tokens = resposta.split(" ; ");
-        String[][] aux = new String[tokens.length-2][];
+        String[][] aux = new String[tokens.length-2][2];
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
         String ans = "";
 
@@ -301,8 +307,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return "Any result for your search";
         }
 
-        for(int i = 2; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
-        for(i = 0; i < tokens.length; i++) ans += " " + aux[i][1] + " ;";
+        for(i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
+        for(i = 0; i < aux.length; i++) ans += " " + aux[i][1] + " ;";
 
         return ans;
     }
