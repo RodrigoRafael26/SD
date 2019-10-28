@@ -52,7 +52,9 @@ public class MulticastServer extends Thread{
         TCP_Server server = new TCP_Server(st, st.getServerConfig().getTcp_port());
 
         WebCrawler wc = new WebCrawler(st);
-        ManageRequests mr = new ManageRequests(st);
+        ManageRequests mr1 = new ManageRequests(st);
+//        ManageRequests mr2 = new ManageRequests(st);
+//        ManageRequests mr3 = new ManageRequests(st);
         UpdateServers us = new UpdateServers(st);
         try{
             socket = new MulticastSocket(port);
