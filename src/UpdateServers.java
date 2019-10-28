@@ -24,7 +24,7 @@ public class UpdateServers extends Thread {
 
             }
             try{
-                this.sleep(1000 * 60);
+                this.sleep(10000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -24,16 +24,14 @@ public class ManageRequests extends Thread {
         this.start();
     }
 
-    ;
-
 
     public void run() {
         System.out.println("started manage requests");
         while (true) {
 
             this.request = server_Storage.getRequest();
-            String type = request.substring(7).split(" ; ")[0];
-
+            String type = request.split(" ; ")[0];
+            type = type.replace("type | ","");
             String parameters = request.replace("type | " + type + " ; ", "");
             //System.out.println(parameters);
 
@@ -140,9 +138,14 @@ public class ManageRequests extends Thread {
                     break;
 
                 case "newURL":
-                    String newUrl = data[0].replace("url | ", "");
-
+                    String newUrl = data[0].split(" ; id_server | ")[0].replace("url | ", "");
+                    String server_ID = data[0].split(" ; id_server | ")[1];
                     //add link to queue
+                    if(Integer.parseInt(server_ID)!=server_Storage.getServerConfig().getServer_ID()){
+                        //ignore request and dont send response
+                        response = null;
+                        break;
+                    }
                     server_Storage.addLinkToQueue(newUrl);
 
                     response = "type | status ; operation | success";
@@ -184,7 +187,7 @@ public class ManageRequests extends Thread {
                     //order search results
                     if(!opFailed) {
 
-                        String[] array = (String[]) searchResults.toArray();
+                        String[] array = listToArray(searchResults);
                         Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
@@ -331,12 +334,19 @@ public class ManageRequests extends Thread {
                     temp_S.updateWorkload(Integer.parseInt(info[5].replace("workload ", "")));
 
                     //if server is already on list update information
-                    //boolean serverIsOn = false;
                     Date date = new Date(System.currentTimeMillis());
 
+                    //since lastPingSent is an hashmap if the key already exists it will just update
                     lastPingSent.put(aux_id, date);
 
-
+                    for(String servers : lastPingSent.keySet()){
+                        //if last ping was over 30s remove it from both lists
+                        if(date.getTime() - lastPingSent.get(servers).getTime() > 30000){
+                            lastPingSent.remove(servers);
+                            server_Storage.removeServer(servers);
+                        }
+                    }
+                    //if server is not on list add it
                     if(temp_S.getServer_ID() != server_Storage.getServerConfig().getServer_ID() && !server_Storage.isServerOnline(temp_S)){
                         server_Storage.addOnlineServer(temp_S);
                     }
@@ -359,7 +369,7 @@ public class ManageRequests extends Thread {
                     break;
                 default:
             }
-            if (type.equals("keepAlive")) {
+            if (type.equals("keepAlive") || response == null) {
                 continue;
             }
 
@@ -389,6 +399,19 @@ public class ManageRequests extends Thread {
             }
 
         }
+    }
+
+
+    //auxiliar method to convert CopyOnWriteArrayList to string array
+    private String[] listToArray(CopyOnWriteArrayList<String> list){
+        String[] array = new String[list.size()];
+        int i = 0;
+        for(String s : list){
+            array[i] = s;
+            i++;
+        }
+        return  array;
+
     }
 }
 

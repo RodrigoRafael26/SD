@@ -67,20 +67,8 @@ public class MulticastServer extends Thread{
                 socket.setLoopbackMode(false);
                 String request = new String(packet.getData(), 0, packet.getLength());
                 request = request.trim();
-//                socketBuffer = new byte[length];
-//                packet = new DatagramPacket(socketBuffer, length);
-//                socket.receive(packet);
-//
-//                byte[] data = packet.getData();
-//                String s = new String(data,0,data.length);
-//                System.out.println(request);
-//                System.out.println("recieved request");
+
                 st.addRequestToQueue(request);
-
-                //chamar manage requests aqui
-               //fazer uma queue de requests
-
-
 
             }
 
@@ -152,11 +140,11 @@ class Storage{
         linkList.add(ws);
         notify();
     }
+
     public synchronized void addRequestToQueue(String ws){
         requestQueue.add(ws);
         notify();
     }
-
 
     // add a word to hashmap
     public void addWordToHash(String word, String ws){
@@ -288,6 +276,7 @@ class Storage{
         }
         return onlineServers;
     }
+
     public boolean isServerOnline(ServerConfig s){
         for(ServerConfig temp : onlineServers) {
             if(temp.getServer_ID() == s.getServer_ID()) return true;
@@ -319,6 +308,14 @@ class Storage{
         fileHandler.writeUsers(users);
         serverConfig.updateWorkload(linkList.size());
     }
+
+    public void removeServer(String id){
+        for(ServerConfig s : onlineServers){
+            if(s.getServer_ID() == Integer.parseInt(id)){
+                onlineServers.remove(s);
+            }
+        }
+    }
 }
 
 
@@ -339,7 +336,7 @@ class KeepAlive extends Thread{
 
 
             while(true){
-                st.updateFiles();
+                //st.updateFiles();
 
                 String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~hostname "+ st.getServerConfig().getHostname() + "~TCPport "+ st.getServerConfig().getTcp_port()+"~workload " + st.getServerConfig().getWorkload();
 

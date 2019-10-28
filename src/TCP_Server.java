@@ -75,6 +75,10 @@ class Connection extends Thread{
                 addReference = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) is.readObject();
                 addLinks = (CopyOnWriteArrayList<String>) is.readObject();
 
+                System.out.println("SEARCH UPDATES: " + addSearch.toString());
+                System.out.println("REFERENCE UPDATES: "+ addReference.toString());
+                System.out.println("Link Updates: " + addLinks.toString());
+
                 Merge merge = new Merge(st,addSearch, addReference, addLinks);
 
             }
@@ -145,6 +149,9 @@ class Merge extends Thread{
         for(String url : links){
             st.addLinkToQueue(url);
         }
+
+        //after all updates save server status
+        st.updateFiles();
     }
 
 }

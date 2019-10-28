@@ -43,7 +43,6 @@ public class MulticastClient extends Thread {
                 String message = new String(packet.getData(), 0, packet.getLength());
                 if(message.startsWith("type | keepAlive") || !message.startsWith("type")) continue;
 
-                socket.receive(packet);
                 System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
                 System.out.println(message);
                 message = new String(packet.getData(), 0, packet.getLength());
@@ -73,16 +72,12 @@ class MulticastUser extends Thread {
             Scanner keyboardScanner = new Scanner(System.in);
             while (true) {
                 String readKeyboard = keyboardScanner.nextLine();
-                String length = ""+readKeyboard.length();
-                byte[] buffer = length.getBytes();
-                socket = new MulticastSocket();  // create socket without binding it (only for sending)
+                //String length = ""+readKeyboard.length();
+                byte[] buffer = readKeyboard.getBytes();
+
 
                 InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-                socket.send(packet);
-
-                buffer = readKeyboard.getBytes();
-                packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
             }
         } catch (UnknownHostException e) {
