@@ -215,48 +215,6 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         System.out.println(resposta);
     }
 
-//    private static void search() {
-//        boolean validation = false;
-//        String resposta = null;
-//        String keyword = null;
-//
-//        while (!validation){
-//            System.out.println("\nDigite: ");
-//            keyword = scanner.nextLine().replaceAll("^[,\\s]+", "");
-//            validation = stringChecker(keyword);
-//        }
-//
-//        while(resposta == null){
-//            try {
-//                resposta = serverInterface.searchWeb(keyword, user);
-//            } catch (RemoteException e) {
-//                retryRMIConnection();
-//            }
-//        }
-//        System.out.println(resposta);
-//    }
-//
-//    private static void newURL() {
-//        boolean validation = false;
-//        String resposta = null;
-//        String url = null;
-//
-//        while (!validation){
-//            System.out.println("\nDigite: ");
-//            url = scanner.nextLine().replaceAll("^[,\\s]+", "");
-//            validation = stringChecker(url);
-//        }
-//
-//        while (resposta == null) {
-//            try {
-//                resposta = serverInterface.newURL(url);
-//            }catch (RemoteException e) {
-//                retryRMIConnection();
-//            }
-//        }
-//        System.out.println(resposta);
-//    }
-
     private static void tenMost(int flag) {
         String resposta = "";
         while(resposta.length() == 0) {

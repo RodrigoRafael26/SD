@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 //Class Created to deal with requests
@@ -14,14 +15,14 @@ public class ManageRequests extends Thread {
     private String request;
     private String response;
     private String responseAddress;
-    private HashMap<String, Date> lastPingSent;
+    private ConcurrentHashMap<String, Date> lastPingSent;
 
     //receives as parameter a Storage type object
     public ManageRequests(Storage st) {
         this.server_Storage = st;
         this.request = request;
         this.responseAddress = st.getServerConfig().getAddress();
-        this.lastPingSent = new HashMap<>();
+        this.lastPingSent = new ConcurrentHashMap<>();
         this.start();
     }
 
@@ -125,12 +126,17 @@ public class ManageRequests extends Thread {
 
                 case "url_references":
                     String find_url = data[0].replace("url | ", "");
+                    int item_count;
+
+                    if (!find_url.startsWith("http://") && !find_url.startsWith("https://"))
+                        find_url = "http://".concat(find_url);
                     //go to hashmap to find the url
                     if (server_Storage.getReferenceHash().get(find_url) != null) {
-                        response = "type | url_references ; ";
+                        item_count = server_Storage.getReferenceHash().get(find_url).size();
+                        response = "type | url_references ; item_count | " + item_count;
                         //add all references to the response message
                         for (String url : server_Storage.getReferenceHash().get(find_url)) {
-                            response += "item_name | " + url + " ; ";
+                            response += " ; item_name | " + url;
                         }
 
                     } else {

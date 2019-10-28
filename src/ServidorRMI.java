@@ -249,13 +249,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         if (resposta.compareTo("type | status ; operation | failed") == 0) return "Any result for " + url;
 
         String[] tokens = resposta.split(" ; ");
-        String[][] aux = new String[tokens.length][];
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
-        String list = null;
+        String[][] aux = new String[size][];
+        String list = "";
 
-        for(int i = 2; i < size; i++) aux[i - 2] = tokens[i].split(" \\| ");
-        for(i = 0; i < aux.length; i++) list += " " + aux[i][1] + " ;";
-
+        for(int i = 2; i < tokens.length; i++) aux[i - 2] = tokens[i].split(" \\| ");
+        for(i = 0; i < aux.length; i++) list += aux[i][1] + "\n";
+        System.out.println(list);
         return list;
     }
 
@@ -280,7 +280,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String ans = "";
 
         for(int i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
-        for(i = 0; i < aux.length; i++) ans += " " + aux[i][1] + " ;";
+        for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
         if (ans.length() == 0) return "No searches done";
         return ans;
     }
@@ -301,7 +301,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         for(i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
-        for(i = 0; i < aux.length; i++) ans += " " + aux[i][1] + " ;";
+        for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
         ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
