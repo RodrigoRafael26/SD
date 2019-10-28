@@ -147,7 +147,8 @@ public class ManageRequests extends Thread {
                         response = null;
                         break;
                     }
-
+                    if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://"))
+                        newUrl = "http://".concat(newUrl);
                     response = "type | status ; operation | success";
                     try {
                         Document doc = Jsoup.connect(newUrl).get();
