@@ -15,10 +15,12 @@ public class TCP_Server extends Thread{
     }
     public void run(){
         System.out.println("started tcp server");
+
         try{
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
             CopyOnWriteArrayList<Socket> socketList = new CopyOnWriteArrayList<Socket>();
+            //Thread is waiting for connections then adds them to socketlsit
             while(true) {
                 Socket clientSocket = listenSocket.accept(); // BLOQUEANTE
                 System.out.println("CLIENT_SOCKET (created at accept())="+clientSocket);
@@ -64,8 +66,8 @@ class Connection extends Thread{
 
         try{
 
-            System.out.println("chegou aqui/ socketList size: " +socketList.size());
 
+            //recieves all info needed to update server
             for (Socket clientSocket: socketList) {
                 DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
                 ObjectOutputStream os = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -76,14 +78,14 @@ class Connection extends Thread{
                 addReference = (ConcurrentHashMap<String, CopyOnWriteArrayList<String>>) is.readObject();
                 addLinks = (CopyOnWriteArrayList<String>) is.readObject();
 
-                System.out.println("SEARCH UPDATES: " + addSearch.toString());
-                System.out.println("REFERENCE UPDATES: "+ addReference.toString());
-                System.out.println("Link Updates: " + addLinks.toString());
+//                System.out.println("SEARCH UPDATES: " + addSearch.toString());
+//                System.out.println("REFERENCE UPDATES: "+ addReference.toString());
+//                System.out.println("Link Updates: " + addLinks.toString());
 
                this.merge();
 
             }
-            System.out.println("TERMINA O FOR");
+//            System.out.println("TERMINA O FOR");
             socketList.clear();
 
 

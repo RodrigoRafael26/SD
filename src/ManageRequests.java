@@ -6,21 +6,23 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+//Class Created to deal with requests
 public class ManageRequests extends Thread {
     private Storage server_Storage;
     private String request;
     private String response;
     private String responseAddress;
-    private HashMap<String, Date> lastPingSent;
+    private ConcurrentHashMap<String, Date> lastPingSent;
 
-
+    //receives as parameter a Storage type object
     public ManageRequests(Storage st) {
         this.server_Storage = st;
         this.request = request;
         this.responseAddress = st.getServerConfig().getAddress();
-        this.lastPingSent = new HashMap<>();
+        this.lastPingSent = new ConcurrentHashMap<>();
         this.start();
     }
 
@@ -29,29 +31,28 @@ public class ManageRequests extends Thread {
         System.out.println("started manage requests");
         while (true) {
 
+            //each loop this thread gets one request from request queue, if the queue is empty the thread waits for new request
             this.request = server_Storage.getRequest();
             String type = request.split(" ; ")[0];
             type = type.replace("type | ","");
             String parameters = request.replace("type | " + type + " ; ", "");
-            //System.out.println(parameters);
 
             String[] data = parameters.split(" ; ");
-            //send ack packet
+
             System.out.println(type);
             switch (type) {
                 case "register":
                     //parse the request
-
                     String username = data[0].replace("username | ", "");
                     String password = data[1].replace("password | ", "");
 
-                    //create user
-                    //System.out.println(username + "||"+password);
+
                     //do not allow duplicate users
                     boolean isAdmin = false;
                     int id = 1;
                     String resp;
                     if (server_Storage.getUserList().isEmpty()) {
+                        //if user list is empty make first user admin
                         isAdmin = true;
                         id = 1;
                         resp = "type | status ; operation | success ; isAdmin | true" ;
@@ -68,6 +69,8 @@ public class ManageRequests extends Thread {
                         }
                     }
 
+                    //Create new user object
+
                     User u = new User(username, password, isAdmin, id);
 
                     //add user to list
@@ -79,7 +82,7 @@ public class ManageRequests extends Thread {
                     break;
 
                 case "login":
-
+                    //parse the rest of request string
                     username = data[0].replace("username | ", "");
                     password = data[1].replace("password | ", "");
 
@@ -123,11 +126,17 @@ public class ManageRequests extends Thread {
 
                 case "url_references":
                     String find_url = data[0].replace("url | ", "");
+                    int item_count;
+
+                    if (!find_url.startsWith("http://") && !find_url.startsWith("https://"))
+                        find_url = "http://".concat(find_url);
                     //go to hashmap to find the url
                     if (server_Storage.getReferenceHash().get(find_url) != null) {
-                        response = "type | url_references ; ";
+                        item_count = server_Storage.getReferenceHash().get(find_url).size();
+                        response = "type | url_references ; item_count | " + item_count;
+                        //add all references to the response message
                         for (String url : server_Storage.getReferenceHash().get(find_url)) {
-                            response += "item_name | " + url + " ; ";
+                            response += " ; item_name | " + url;
                         }
 
                     } else {
@@ -140,7 +149,8 @@ public class ManageRequests extends Thread {
                 case "newURL":
                     String newUrl = data[0].split(" ; ")[0].replace("url | ", "");
                     String server_ID = data[1].replace("id_server | ","");
-                    System.out.println(server_ID);
+                    //System.out.println(server_ID);
+
                     //add link to queue
                     if(Integer.parseInt(server_ID)!=server_Storage.getServerConfig().getServer_ID()){
                         //ignore request and dont send response
@@ -148,11 +158,16 @@ public class ManageRequests extends Thread {
                         break;
                     }
 
+                    //Make sure the link can be read by jsoup
+                    if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://"))
+                        newUrl = "http://".concat(newUrl);
                     response = "type | status ; operation | success";
+
+                    //if jsoup cant connect to link means the url is invalid
                     try {
                         Document doc = Jsoup.connect(newUrl).get();
                     } catch (Exception e) {
-                        // mandar notificacao para o admin a dizer que o url nao esta disponivel
+                        //tell admin the user he asked for is not available
                         System.out.println(e.getMessage());
                         System.out.println(newUrl);
                         response = "type | status ; operation | failed";
@@ -167,7 +182,10 @@ public class ManageRequests extends Thread {
                     String[] seachTerms = data[1].replace("text | ", "").split(" ");
                     String pesquisa ="";
                     CopyOnWriteArrayList<String> searchResults = server_Storage.getSearchHash().get(seachTerms[0]);
+
                     boolean opFailed = false;
+
+                    //add all the urls that contain all every searchword to searchResults ArrayList
                     for (String s : seachTerms) {
                         CopyOnWriteArrayList<String> merged = new CopyOnWriteArrayList<>();
                         CopyOnWriteArrayList<String> temp = server_Storage.getSearchHash().get(s);
@@ -193,6 +211,8 @@ public class ManageRequests extends Thread {
                     if(!opFailed) {
                         if(username.compareTo("null")!=0) server_Storage.getUser(username).addToHist(pesquisa);
                         String[] array = listToArray(searchResults);
+
+                        //sort array by importance (number of links that reference eachURL)
                         Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
@@ -200,6 +220,8 @@ public class ManageRequests extends Thread {
                         String title = "";
                         String citation = "";
                         String order_search;
+
+                        //if the research has more than 10 results send the top 10 and how many results were found
                         if(array.length >= 10){
 
                             for (int i = 0; i < 10; i++) {
@@ -214,6 +236,7 @@ public class ManageRequests extends Thread {
                                 resp += "item_name | " + order_search + " ; " + "title | " + title + " ; " + "citation | " + citation + " ; ";
                             }
                         }else {
+                            //if it has less than 10 send all urls found
                             for (String search : array) {
                                 order_search = search;
                                 try {
@@ -230,6 +253,7 @@ public class ManageRequests extends Thread {
                     }
                     break;
                 case "give_privilege":
+                    //get user that will get the admin previledge
                     username = data[0].replace("username | ", "");
 
                     //check if user exists
@@ -253,6 +277,7 @@ public class ManageRequests extends Thread {
 
                 case "logout":
                     username = data[0].replace("username | ", "");
+                    //remove user from online users
                     server_Storage.disconnectUser(username);
                     resp = "type | status ; operation | success";
                     this.response = resp;
@@ -262,13 +287,14 @@ public class ManageRequests extends Thread {
                     //get all the indexed websites
                     String[] mostImportant =  keySetToArray(server_Storage.getReferenceHash().keySet());
 
+                    //sort array by
                     Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
 
                     resp = "type | 10MostImportant ; ";
 
                     if (mostImportant.length >= 10) {
                         for (int i = 0; i < 10; i++) {
-                            resp += "item_name | " + mostImportant[10] + " ; ";
+                            resp += "item_name | " + mostImportant[i] + " ; ";
                         }
                     } else {
                         for (String s : mostImportant) {
@@ -299,7 +325,9 @@ public class ManageRequests extends Thread {
                         }
                     }
 
+
                     String[] ordered_array = keySetToArray(termFrequency.keySet());
+                    //order array by the frequency of each search term
                     Arrays.sort(ordered_array, new terms_Comparator(termFrequency));
 
                     resp = "type | 10MostSearched ; ";
@@ -321,6 +349,7 @@ public class ManageRequests extends Thread {
                     username = data[0].replace("username | ", "");
                     User user = server_Storage.getUser(username);
 
+                    //create a message qith all user pending notifications
                     String notifications = "type | notifications ; item_count | " + user.getNotifications().size();
                     if (user.getNotifications() != null) {
 
@@ -395,9 +424,11 @@ public class ManageRequests extends Thread {
                 default:
             }
             if (type.equals("keepAlive") || response == null) {
+                //ignore keepalives only need to read them
                 continue;
             }
 
+            //Send the response to RMI
             int resp_port = 4324;
             MulticastSocket resp_socket = null;
             try {
@@ -451,6 +482,7 @@ public class ManageRequests extends Thread {
     }
 }
 
+//Use this comparator to order URLs by the number of times they were referenced
 class URL_Comparator implements Comparator<String> {
     private Storage st;
 
@@ -464,6 +496,7 @@ class URL_Comparator implements Comparator<String> {
     }
 }
 
+//Order Strings by the number of times they were searched
 class terms_Comparator implements Comparator<String> {
     private HashMap<String, Integer> map;
     public terms_Comparator(HashMap<String, Integer> map){

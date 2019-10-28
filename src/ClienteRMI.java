@@ -3,12 +3,11 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.rmi.*;
 
 public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
-    private static Scanner sc = new Scanner(System.in);
+    private static Scanner scanner = new Scanner(System.in);
     private static ServerInterface serverInterface;
     private static ClientInterface clientInterface;
     private static String user = null;
@@ -24,10 +23,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return serverInterface;
     }
 
-    private static void setPort(int port) {
-        PORT = port;
-    }
-
+//    tenta conectar ao registry backup
     private static void setClientInterface() throws RemoteException {
         while (true) {
             try {
@@ -45,23 +41,22 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    public static void main(String args[]) throws IOException, NotBoundException, InterruptedException {
+//    inicio do programa
+    public static void main(String[] args) throws IOException {
         RMIhost = args[0];
         myHost = args[1];
 
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            public void run() {
-                while(true) {
-                    try {
-                        if(user!=null)
-                            serverInterface.logout(user);
-                        break;
-                    } catch (RemoteException e) {
-                        retryRMIConnection();
-                    }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            while(true) {
+                try {
+                    if(user!=null)
+                        serverInterface.logout(user);
+                    break;
+                } catch (RemoteException e) {
+                    retryRMIConnection();
                 }
             }
-        });
+        }));
         clientInterface = new ClienteRMI();
         startsRMIConnection();
         registoLoginMenu();
@@ -72,6 +67,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return user;
     }
 
+//    procura o registry do servidor RMI
     private static void startsRMIConnection() {
         try {
             serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
@@ -80,19 +76,20 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
+//    procura o registry novamente, incrementa o porto e caso ja seja durante a usabilidade de um user passa a funcao setClienteInterface
     private static void retryRMIConnection() {
         while (true) {
             try {
                 Thread.sleep(1000);
                 serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
-                PORT = serverInterface.hello();
+                PORT = serverInterface.addPort();
                 if (user != null)
                     setClientInterface();
                 break;
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             } catch (Exception e) {
-                System.out.println("........ not working .........");
+                System.out.print(".");
             }
         }
     }
@@ -110,7 +107,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
             try {
                 try {
-                    option = Integer.parseInt(sc.nextLine().replaceAll("^[,\\s]+", ""));
+                    option = Integer.parseInt(scanner.nextLine().replaceAll("^[,\\s]+", ""));
                 } catch (NumberFormatException e) {
                     System.out.println("I can only work with numbers bro!");
                     continue;
@@ -129,7 +126,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                     }
                     break;
                 }else if (option == 3) {
-                    search();
+                    searchAndNewURL(1);
                 }
                 else
                     System.out.println("Digita uma opcao valida!");
@@ -144,6 +141,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         boolean verifier = false;
         while (true) {
             // user sem login
+            verifyNotification();
             System.out.println("\t\tMAIN MENU\n");
             System.out.println("\n\t1) Pesquisa");
             if (perk <= 2) { //user normal
@@ -159,7 +157,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             System.out.println("\n\t0) Logout\n\n");
 
             try {
-                option = Integer.parseInt(sc.nextLine().replaceAll("^[,\\s]+", ""));
+                option = Integer.parseInt(scanner.nextLine().replaceAll("^[,\\s]+", ""));
             } catch (NumberFormatException e) {
                 System.out.println("I can only work with numbers bro!");
                 continue;
@@ -175,7 +173,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 return;
             }
             if (option == 1)
-                search();
+                searchAndNewURL(option);
             else if (option == 2 && perk <= 2)
                 pagesList();
             else if (option == 3 && perk <= 2)
@@ -187,27 +185,30 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             else if (option == 6 && perk == 1)
                 givePrivileges();
             else if (option == 7 && perk == 1)
-                newURL();
+                searchAndNewURL(7);
             else
                 System.out.println("Escolha uma opcao valida!");
         }
     }
 
-    private static void newURL() {
+    private static void searchAndNewURL(int flag) {
         boolean validation = false;
         String resposta = null;
-        String url = null;
+        String keyword = null;
 
         while (!validation){
             System.out.println("\nDigite: ");
-            url = sc.nextLine().replaceAll("^[,\\s]+", "");
-            validation = stringChecker(url);
+            keyword = scanner.nextLine().replaceAll("^[,\\s]+", "");
+            validation = stringChecker(keyword);
         }
 
-        while (resposta == null) {
+        while(resposta == null){
             try {
-                resposta = serverInterface.newURL(url);
-            }catch (RemoteException e) {
+                if(flag == 1)
+                    resposta = serverInterface.searchWeb(keyword, user);
+                else if(flag == 7)
+                    resposta = serverInterface.newURL(keyword);
+            } catch (RemoteException e) {
                 retryRMIConnection();
             }
         }
@@ -242,36 +243,14 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         System.out.println(resposta);
     }
 
-    private static void search() {
-        boolean validation = false;
-        String resposta = null;
-        String keyword = null;
-
-        while (!validation){
-            System.out.println("\nDigite: ");
-            keyword = sc.nextLine().replaceAll("^[,\\s]+", "");
-            validation = stringChecker(keyword);
-        }
-
-        while(resposta == null){
-            try {
-                resposta = serverInterface.searchWeb(keyword, user);
-            } catch (RemoteException e) {
-                retryRMIConnection();
-            }
-        }
-        System.out.println(resposta);
-    }
-
     private static void pagesList() {
-        String aux, url = null;
+        String url = null;
         String resposta = null;
-        int aux_int;
         boolean validation = false;
 
         while(!validation){
             System.out.println("\nURL: ");
-            url = sc.nextLine();
+            url = scanner.nextLine();
             validation = stringChecker(url);
         }
         while(resposta == null){
@@ -288,12 +267,11 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static void validationMenu(int option) throws RemoteException {
         String username, password;
         int verifier = 0;
-        boolean validation;
 
         while(true) {
             System.out.println("0 to go back!");
             System.out.println("Username: ");
-            username = sc.nextLine().replaceAll("^[,\\s]+", " ");
+            username = scanner.nextLine().replaceAll("^[,\\s]+", " ");
             if (username.compareTo("0") == 0) break;
             if(username.contains(" ")) {
                 System.out.println("O username nao pode conter espaços");
@@ -303,7 +281,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 continue;
             }
             System.out.println("\nPassword: ");
-            password = sc.nextLine().replaceAll("^[,\\s]+", "");
+            password = scanner.nextLine().replaceAll("^[,\\s]+", "");
             if (password.compareTo("0") == 0) break;
             if(password.contains(" ")) {
                 System.out.println("A password nao pode conter espaços");
@@ -333,7 +311,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 perk = verifier;
                 while(true) {
                     try {
-                        PORT = serverInterface.hello();
+                        PORT = serverInterface.addPort();
                         break;
                     } catch (RemoteException e) {
                         retryRMIConnection();
@@ -373,6 +351,11 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return true;
     }
 
+    private static void verifyNotification() throws RemoteException {
+        String answer = serverInterface.verifyNotification(user);
+        System.out.println(answer);
+    }
+
     private static void givePrivileges() throws RemoteException {
         boolean validation = false;
         boolean verifier;
@@ -380,7 +363,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
         while(!validation){
             System.out.println("\nUsername de quem terá privilégio: ");
-            username = sc.nextLine();
+            username = scanner.nextLine();
             if(username.contains(" ")){
                 System.out.println("Username cannot contain spaces");
                 continue;
@@ -394,7 +377,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         mainMenu();
     }
 
-    public void notification (String message) throws RemoteException{
+    public void notification (String message){
         System.out.println("NOTIFICACAO");
         System.out.println(message);
     }

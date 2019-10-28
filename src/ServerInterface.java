@@ -5,7 +5,7 @@ import java.rmi.*;
 import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
-    public int hello() throws java.rmi.RemoteException;
+    public int addPort() throws java.rmi.RemoteException;
     public boolean logout(String user) throws java.rmi.RemoteException;
     public int register(String username, String password) throws java.rmi.RemoteException;
     public int login(String username, String password) throws java.rmi.RemoteException;
@@ -18,4 +18,5 @@ public interface ServerInterface extends Remote {
     public void newClient(int port, String myHost) throws java.rmi.RemoteException;
     public void ping() throws java.rmi.RemoteException;
     public String newURL(String url) throws java.rmi.RemoteException;
+    public String verifyNotification(String user) throws java.rmi.RemoteException;
 }

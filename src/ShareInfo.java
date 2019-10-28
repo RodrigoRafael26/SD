@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.sql.SQLOutput;
 
 public class ShareInfo extends Thread{
     private Storage st;
@@ -20,6 +21,7 @@ public class ShareInfo extends Thread{
 
 
     }
+    //connect with other servers through tcp
     public void run(){
         try {
             // 1o passo
@@ -32,26 +34,31 @@ public class ShareInfo extends Thread{
             //send search differences
             os.writeObject(st.getSearchUpdates());
             os.writeObject(st.getReferenceUpdates());
+            String temp;
             //check if is needed to share URLs
             int sumURLs = 0;
             for(ServerConfig s : st.getOnlineServers())  sumURLs+= s.getWorkload();
 
             //if it has over 20% more URLs than it would have if the system was perfectly balanced/ completly balance the servers workload
-            if(st.getServerConfig().getWorkload() > sumURLs / st.getOnlineServers().size() + ((sumURLs / st.getOnlineServers().size())*0.2)){
-                //Discover the x amount needed to send each server balance workload
-                int x = (sumURLs - st.getServerConfig().getWorkload()) / st.getOnlineServers().size();
-                //remove last X urls from queue
-                for(int i = 0; i < x;i++){
-                    //always remove last one and add it to the array that will be sent to other server
 
-                    st.getShareUrls().add(st.getLinkList().remove(st.getLinkList().size()-1));
+            if(st.getServerConfig().getWorkload() > sumURLs*0.7){
+                //Discover the x amount needed to send each server balance workload
+//                System.out.println("CHEGOU AO SHARE WORKLOAD");
+                int x = (int) (sumURLs*0.3);
+                //remove X urls from queue
+                for(int i = 0; i < x;i++){
+                    //always one and add it to the array that will be sent to other server
+                    temp = st.getLink();
+//                    System.out.println("queue size: "+ st.getLinkList().size());
+//                    System.out.println("SHOW TEMP "+ temp);
+                    st.getShareUrls().add(temp);
                 }
             }
-
+            System.out.println(st.getShareUrls().toString());
             os.writeObject(st.getShareUrls());
 
             try {
-                this.sleep(100);
+                this.sleep(1000);
                 s.close();
             } catch (IOException e) {
                 System.out.println("close:" + e.getMessage());

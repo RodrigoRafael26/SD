@@ -15,9 +15,11 @@ import java.util.*;
 
 public class WebCrawler extends Thread{
     public Storage st;
+    private int indexed_links;
 
     public WebCrawler(Storage st){
         this.st = st;
+        this.indexed_links = 0;
         System.out.println("começou o web crawler");
         this.start();
     }
