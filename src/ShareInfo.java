@@ -20,6 +20,7 @@ public class ShareInfo extends Thread{
 
 
     }
+    //connect with other servers through tcp
     public void run(){
         try {
             // 1o passo
@@ -32,6 +33,7 @@ public class ShareInfo extends Thread{
             //send search differences
             os.writeObject(st.getSearchUpdates());
             os.writeObject(st.getReferenceUpdates());
+            String temp;
             //check if is needed to share URLs
             int sumURLs = 0;
             for(ServerConfig s : st.getOnlineServers())  sumURLs+= s.getWorkload();
@@ -43,8 +45,9 @@ public class ShareInfo extends Thread{
                 //remove last X urls from queue
                 for(int i = 0; i < x;i++){
                     //always remove last one and add it to the array that will be sent to other server
-
-                    st.getShareUrls().add(st.getLinkList().remove(st.getLinkList().size()-1));
+                    temp = st.getLinkList().remove(st.getLinkList().size()-1);
+                    System.out.println(temp);
+                    st.getShareUrls().add(temp);
                 }
             }
 

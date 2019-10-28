@@ -5,7 +5,7 @@ import java.rmi.*;
 import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
-    public int hello() throws java.rmi.RemoteException;
+    public int addPort() throws java.rmi.RemoteException;
     public boolean logout(String user) throws java.rmi.RemoteException;
     public int register(String username, String password) throws java.rmi.RemoteException;
     public int login(String username, String password) throws java.rmi.RemoteException;

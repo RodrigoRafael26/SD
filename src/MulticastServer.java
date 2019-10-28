@@ -49,13 +49,14 @@ public class MulticastServer extends Thread{
     public void run(){
 
         MulticastSocket socket = null;
-        TCP_Server server = new TCP_Server(st, st.getServerConfig().getTcp_port());
 
+        //starts needed threads
+        TCP_Server server = new TCP_Server(st, st.getServerConfig().getTcp_port());
         WebCrawler wc = new WebCrawler(st);
         ManageRequests mr1 = new ManageRequests(st);
-//        ManageRequests mr2 = new ManageRequests(st);
-//        ManageRequests mr3 = new ManageRequests(st);
         UpdateServers us = new UpdateServers(st);
+
+        //start connection between server and multicast group
         try{
             socket = new MulticastSocket(port);
             System.out.println(multicast_address);
@@ -79,8 +80,7 @@ public class MulticastServer extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }finally{
-            //guardar mensagens que estiverem por enviar
-            //
+
             socket.close();
 
         }
@@ -89,6 +89,7 @@ public class MulticastServer extends Thread{
 
 }
 
+//this class has all server information, it is also used to synchronize accesss to files and queues
 class Storage{
     private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchIndex;
     private ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceIndex;
@@ -121,7 +122,7 @@ class Storage{
         fillInfo();
 
     }
-    private void fillInfo(){
+    private synchronized void fillInfo(){
 
         if(fileHandler.getReferenceIndex()!=null){
             referenceIndex = fileHandler.getReferenceIndex();
@@ -140,11 +141,13 @@ class Storage{
         onlineServers.add(serverConfig);
     }
 
+    //every time a link is added to queue notify waiting thread
     public synchronized void addLinkToQueue(String ws){
         linkList.add(ws);
         notify();
     }
 
+    //every time a request is added to queue notify waiting thread
     public synchronized void addRequestToQueue(String ws){
         requestQueue.add(ws);
         notify();
@@ -269,8 +272,9 @@ class Storage{
         }
     }
 
-    public synchronized CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
 
+    public synchronized CopyOnWriteArrayList<ServerConfig> getOnlineServers(){
+        //if onlineServers is empty wait
         while (onlineServers.size()<2){
             try{
                 wait();
@@ -289,6 +293,7 @@ class Storage{
         return false;
     }
 
+    //notify waiting thread when another multicast server starts
     public synchronized void addOnlineServer(ServerConfig s){
         onlineServers.add(s);
         notify();
@@ -306,7 +311,7 @@ class Storage{
         return shareUrls;
     }
 
-    public void updateFiles(){
+    public synchronized void updateFiles(){
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
         fileHandler.writeUsers(users);
@@ -322,12 +327,11 @@ class Storage{
     }
 }
 
-
+//this thread is only in charge of sending keepAlives to multicast group
 class KeepAlive extends Thread{
     private Storage st;
     private int counter;
     public KeepAlive(Storage st){
-        //send keepAlives to multicast group
         this.st = st;
         this.counter = 0;
     }
@@ -342,25 +346,21 @@ class KeepAlive extends Thread{
 
 
             while(true){
-                //st.updateFiles();
 
                 String message = "type | keepAlive ; serverID " + st.getServerConfig().getServer_ID() + "~address "+ st.getServerConfig().getAddress() + "~port "+ st.getServerConfig().getPort()+"~hostname "+ st.getServerConfig().getHostname() + "~TCPport "+ st.getServerConfig().getTcp_port()+"~workload " + st.getServerConfig().getWorkload();
 
-                //String length = "" + message.length();
                 byte[] buffer =message.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
                 socket.send(packet);
                 counter ++;
                 if(counter == 60){
+                    //update files every 60 seconds
                     st.updateFiles();
                 }
-//                buffer = message.getBytes();
-//                packet = new DatagramPacket(buffer, buffer.length, address, st.getServerConfig().getPort());
-//                System.out.println("Multicast server " + st.getServerConfig().getServer_ID() + " sent heartbeat!");
-//                socket.send(packet);
+
                 try{
                     this.sleep(1000);
-                    //clear online servers list
+
 
                 }catch(InterruptedException e){}
             }

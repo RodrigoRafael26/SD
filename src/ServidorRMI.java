@@ -11,17 +11,14 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
-    private boolean[] servers = {false, false};
-    int replyServer = 0;
     private static ServerInterface serverInterface;
     //passar parametros multicast por parametro / file
     private String MULTICAST_ADDRESS = "224.0.224.0";
     private int PORT = 4320;
-    private String name = "RMIServer";
     private CopyOnWriteArrayList<ClientInterface> clientsList = new CopyOnWriteArrayList<>();
     private int clientPort = 7000;
     private int i;
-    String request;
+    private String request;
 
     private ServidorRMI() throws RemoteException {
     }
@@ -36,9 +33,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     private static void createRegistry() throws RemoteException, InterruptedException {
-        /*Creates registry of new RMI server on port 7000
-        If AccessException happens => prints message
-        If ExportException happens => There is already a RMI server, then changes to backup RMI server*/
         int port = 7000;
         try {
             Registry registry = LocateRegistry.createRegistry(port);
@@ -53,17 +47,15 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     private static void secondaryRMI() throws RemoteException, InterruptedException {
-        /*This function is executed when a new RMI server is created but there's already a main one*/
-
         try {
             serverInterface = (ServerInterface) LocateRegistry.getRegistry(7000).lookup("Sporting"); // liga-se ao RMI Primário
             System.out.println("Backup RMI ready!");
         } catch (ConnectException | NotBoundException e) {
             System.out.println("Attempting to become primary RMI server...");
-            createRegistry(); //se não der, é porque entretanto deu cagada no primário e tenta ser ele o primário
+            createRegistry();
         }
         int timer = 1;
-        //iniciam os pings: ao fim de 5 pings, se não tiver obtido resposta do RMI primário, torna-se primário
+        //inicio dos pings: ao fim de 5 pings, se não tiver obtido resposta do RMI primário, torna-se primário
         while (true){
             try {
                 Thread.sleep(500);
@@ -126,7 +118,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return answer.split(" ; ")[1].split(" \\| ")[1];
     }
 
-    public int hello() throws RemoteException {
+    public int addPort() throws RemoteException {
         clientPort++;
         return clientPort;
     }
@@ -143,7 +135,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.joinGroup(group);
                 socket.setLoopbackMode(false);
 
-////              Envia para multicast o tamanha do buffer
+////              Envia para multicast o tamanho do buffer
 //                String length = "" + request.length();
 //                byte[] buffer = length.getBytes();
 //                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
@@ -151,7 +143,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
                 try {
                    Thread.sleep(1000);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException ignored) {}
 
 //              envia para multicast o request
                 byte[] buffer = request.getBytes();
@@ -166,7 +158,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 packet = new DatagramPacket(buffer, buffer.length);
                 socket = new MulticastSocket(4324);
                 socket.joinGroup(group);
-                //socket.setSoTimeout(5000);
+                socket.setSoTimeout(5000);
                 socket.receive(packet);
 
 ////                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
@@ -183,7 +175,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 if(count++ < 0) {
                     request = "type | resend ; " + request;
                 }
-                continue;
             }catch (IOException ioe) {
                 ioe.printStackTrace();
             } finally {
@@ -345,7 +336,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
         String[][] aux = new String[tokens.length-2][];
         if (size == 0){
-            return "No notifications";
+            return "";
         }
         for (i = 2; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
         for (i = 0; i < aux.length; i++) sendNotification(aux[i][1], username);

@@ -3,12 +3,15 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+//This class is only used to read and write files recieves as a parameter the path for the config file
 public class HandleFiles{
     String configFile;
     public HandleFiles(String config){
         this.configFile = config;
     }
 
+    //function to get users from object file
+    //returns CopyOnWriteArrayList<User> with all saved users
     public CopyOnWriteArrayList<User> readUsers(){
 
         File f = new File("Users");
@@ -34,6 +37,8 @@ public class HandleFiles{
         return userList;
     }
 
+    //function to write users to object file
+    //gets as parameter one CopyOnWriteArrayList<User> e escreve no ficheiro de objetos "Users" no path do projeto
     public void writeUsers(CopyOnWriteArrayList<User> usersList){
         File f = new File("Users");
 
@@ -49,6 +54,9 @@ public class HandleFiles{
         }
     }
 
+    //Recieves as parameter ConcurrentHashMap<String, CopyOnWriteArrayList<String>> containing all urls as keys
+    // and a CopyOnWriteArrayList<String> off all links that reference that URL
+    //Writes the content of that hash map to the object file "ReferenceIndex" in the project path
     public void writeReferenceIndex(ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceMap){
         File f = new File("ReferenceIndex");
 
@@ -65,6 +73,9 @@ public class HandleFiles{
 
     }
 
+
+    //Goes to project path and tries to open the object file "ReferenceIndex"
+    //If the file exists and is not corrupted returns a hash map of all the URLs and the websites that reference them previously indexed else returns null
     public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getReferenceIndex(){
         File f = new File("ReferenceIndex");
         ConcurrentHashMap<String, CopyOnWriteArrayList<String>> referenceMap = null;
@@ -88,6 +99,9 @@ public class HandleFiles{
         return referenceMap;
     }
 
+    //Recieves as parameter ConcurrentHashMap<String, CopyOnWriteArrayList<String>> containing all indexed words as keys
+    //and a CopyOnWriteArrayList<String> where that word was found
+    //Writes the content of that hash map to the object file "ReferenceIndex" in the project path
     public  void writeSearchIndex(ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchMap){
         File f = new File("SearchIndex");
 
@@ -103,6 +117,8 @@ public class HandleFiles{
         }
     }
 
+    //Goes to project path and tries to open the object file "SearchIndex"
+    //If the file exists and is not corrupted returns a hash map of all the words previously indexed else returns null
     public ConcurrentHashMap<String, CopyOnWriteArrayList<String>> getSearchIndex(){
         File f = new File("SearchIndex");
         ConcurrentHashMap<String, CopyOnWriteArrayList<String>> searchMap = null;
@@ -126,6 +142,7 @@ public class HandleFiles{
         return searchMap;
     }
 
+    //Reads the config file passed in as parameter, returns an object ServerConfig that contain all the server info
     public ServerConfig readConfig(){
         String multicast_address;
         int multicast_port;
