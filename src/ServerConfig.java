@@ -20,7 +20,7 @@ public class ServerConfig implements Serializable {
         this.workload = 0;
 
         InetAddress tcp_address = InetAddress.getLocalHost();
-        this.hostname = tcp_address.getHostName();
+        this.hostname = tcp_address.getHostAddress();
 
     }
     public String getHostname(){
