@@ -141,7 +141,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         boolean verifier = false;
         while (true) {
             // user sem login
-            verifyNotification();
+            //verifyNotification();
             System.out.println("\t\tMAIN MENU\n");
             System.out.println("\n\t1) Pesquisa");
             if (perk <= 2) { //user normal
@@ -379,6 +379,8 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
     public void notification (String message){
         System.out.println("NOTIFICACAO");
+        if(message.compareTo("You are now an admin") == 0 || message.compareTo("You are admin now!") == 0)
+            perk = 1;
         System.out.println(message);
     }
 

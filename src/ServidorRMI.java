@@ -340,7 +340,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         if (size == 0){
             return "";
         }
-        for (i = 2; i < tokens.length; i++) aux[i] = tokens[i].split(" \\| ");
+        for (i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
         for (i = 0; i < aux.length; i++) sendNotification(aux[i][1], username);
         return answer;
     }
