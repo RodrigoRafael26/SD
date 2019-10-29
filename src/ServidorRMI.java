@@ -13,8 +13,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
     private static ServerInterface serverInterface;
     //passar parametros multicast por parametro / file
-    private String MULTICAST_ADDRESS = "224.0.224.0";
-    private int PORT = 4320;
+    private static String MULTICAST_ADDRESS = "224.1.224.1";
+    private static int PORT = 4320;
     private CopyOnWriteArrayList<ClientInterface> clientsList = new CopyOnWriteArrayList<>();
     private int clientPort = 7000;
     private int i;
@@ -24,6 +24,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public static void main(String[] args) throws RemoteException {
+        PORT = Integer.parseInt(args[0]);
+        MULTICAST_ADDRESS = args[1];
         try {
             serverInterface = new ServidorRMI();
             createRegistry();
