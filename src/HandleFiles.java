@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -173,7 +174,8 @@ public class HandleFiles{
 
         ServerConfig s = null;
         try {
-            s = new ServerConfig(multicast_port,multicast_address,tcp_port, serverID);
+            String hostname = InetAddress.getLocalHost().getHostAddress();
+            s = new ServerConfig(multicast_port,multicast_address, hostname,tcp_port, serverID);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }

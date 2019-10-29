@@ -10,17 +10,17 @@ public class ServerConfig implements Serializable {
     private int tcp_port;
     private int workload;
     private String hostname;
-    //posso ter de meter aqui TCP address e TCP port
 
-    public ServerConfig(int port, String address, int tcp_port, int server_ID) throws UnknownHostException {
+
+    public ServerConfig(int port, String address, String hostname, int tcp_port, int server_ID) throws UnknownHostException {
         this.port = port;
         this.address = address;
         this.tcp_port = tcp_port;
         this.server_ID = server_ID;
         this.workload = 0;
-
-        InetAddress tcp_address = InetAddress.getLocalHost();
-        this.hostname = tcp_address.getHostAddress();
+        this.hostname = hostname;
+//        InetAddress tcp_address = InetAddress.getLocalHost();
+//        this.hostname = tcp_address.getHostAddress();
 
     }
     public String getHostname(){
