@@ -374,13 +374,14 @@ public class ManageRequests extends Thread {
                     int server_id = Integer.parseInt(info[0].replace("serverID ", ""));
                     String address = info[1].replace("address ", "");
                     int server_port = Integer.parseInt(info[2].replace("port ", ""));
+                    String hostname = info[3].replace("hostname ", "");
                     int tcp_port = Integer.parseInt(info[4].replace("TCPport ", ""));
-//                    System.out.println(server_id);
+                    System.out.println(server_id + ":" + address);
 
                     String aux_id = ""+server_id;
                     ServerConfig temp_S = null;
                     try {
-                        temp_S = new ServerConfig(server_port, address, tcp_port, server_id);
+                        temp_S = new ServerConfig(server_port, address, hostname, tcp_port, server_id);
                     } catch (UnknownHostException e) {
                         e.printStackTrace();
                     }

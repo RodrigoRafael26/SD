@@ -25,6 +25,7 @@ public class ShareInfo extends Thread{
     public void run(){
         try {
             // 1o passo
+
             s = new Socket(host,serversocket);
 
 //            DataInputStream in = new DataInputStream(s.getInputStream());
@@ -71,6 +72,7 @@ public class ShareInfo extends Thread{
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
+
             System.out.println("IO:" + e.getMessage());
         }
 
