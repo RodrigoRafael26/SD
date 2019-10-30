@@ -330,7 +330,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                     if (option == 1)
                         System.out.println("Username already exists. Please choose another one!");
                     else
-                        System.out.println("Username doesn't exist!");
+                        System.out.println("Username or password incorrects!");
                 }
                 else{
                     System.out.println("Wrong password!");

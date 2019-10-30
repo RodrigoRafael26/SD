@@ -1,8 +1,4 @@
-import com.sun.security.ntlm.Client;
-
-import java.io.IOException;
 import java.rmi.*;
-import java.util.ArrayList;
 
 public interface ServerInterface extends Remote {
     public int addPort() throws java.rmi.RemoteException;

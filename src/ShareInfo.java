@@ -68,7 +68,8 @@ public class ShareInfo extends Thread{
             }
         } catch (UnknownHostException e) {
             //remove host from online servers list
-            System.out.println("Sock:" + e.getMessage());
+//            System.out.println("Sock:" + e.getMessage());
+            System.out.println("Server offline removed");
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {

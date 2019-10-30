@@ -395,7 +395,7 @@ public class ManageRequests extends Thread {
 
                     for(String servers : lastPingSent.keySet()){
                         //if last ping was over 30s remove it from both lists
-                        if(date.getTime() - lastPingSent.get(servers).getTime() > 30000){
+                        if(date.getTime() - lastPingSent.get(servers).getTime() > 15000){
                             lastPingSent.remove(servers);
                             server_Storage.removeServer(servers);
                         }
