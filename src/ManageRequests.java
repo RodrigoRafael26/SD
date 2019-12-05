@@ -213,7 +213,7 @@ public class ManageRequests extends Thread {
                         String[] array = listToArray(searchResults);
 
                         //sort array by importance (number of links that reference eachURL)
-                        Arrays.sort(array, new URL_Comparator(server_Storage));
+                        //Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
                         resp = "type | search ; item_count | " + searchResults.size() + " ; ";

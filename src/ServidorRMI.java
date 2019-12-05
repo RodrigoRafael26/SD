@@ -8,6 +8,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
@@ -19,6 +21,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private int clientPort = 7000;
     private int i;
     private String request;
+    private UUID uuid;
 
     private ServidorRMI() throws RemoteException {
     }
@@ -84,21 +87,25 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public void ping() throws java.rmi.RemoteException {
     }
 
-//    1 - envia type | getOnlineServer
-//    2 - recebe type | getOnlineServer ; server | id ; carga | carga
-//    3 - envia type | newURL ; url | url ; id_server | id
-//    4 - recebe type | status ; operation | succeed (ou failed)
+//    1 - envia type | getOnlineServer ; uuid | uuid_example
+//    2 - recebe type | getOnlineServer ; uuid | uuid_example ; server | id ; carga | carga
+//    3 - envia type | newURL ; uuid | uuid_example ; url | url ; id_server | id
+//    4 - recebe type | status ; uuid | uuid_example ; operation | succeed (ou failed)
     public String newURL(String url) throws RemoteException {
-        request = "type | getOnlineServer";
+        uuid = UUID.randomUUID();
+        request = "type | getOnlineServer ; uuid | " + uuid;
         String answer = dealWithRequest(request);
+        while(!answer.contains(request)){
+            answer = dealWithRequest(request);
+        }
 
-        int nrServers = (answer.split(" ; ").length - 1) / 2;
+        int nrServers = (answer.split(" ; ").length - 2) / 2;
         String[] tokens = answer.split(" ; ");
         String[][] aux = new String[nrServers][2];
         int menor = -1;
         String id_server = null;
 
-        for (i = 1; i <= nrServers; i++) {
+        for (i = 2; i <= nrServers; i++) {
             aux[i-1][0] = tokens[2*i - 1].split(" \\| ")[1];
             aux[i-1][1] = tokens[2*i].split(" \\| ")[1];
         }
@@ -114,8 +121,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             }
         }
 
+        uuid = UUID.randomUUID();
+        String confirmRequest = "type | newURL ; uuid | " + uuid;
         request = "type | newURL ; url | " + url + " ; id_server | " + id_server;
         answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
 
         return answer.split(" ; ")[1].split(" \\| ")[1];
     }

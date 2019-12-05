@@ -141,7 +141,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         boolean verifier = false;
         while (true) {
             // user sem login
-            //verifyNotification();
+            verifyNotification();
             System.out.println("\t\tMAIN MENU\n");
             System.out.println("\n\t1) Pesquisa");
             if (perk <= 2) { //user normal
