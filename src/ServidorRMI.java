@@ -1,3 +1,4 @@
+import java.awt.image.BandedSampleModel;
 import java.io.IOException;
 import java.rmi.AccessException;
 import java.rmi.ConnectException;
@@ -272,75 +273,90 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return "Your historic is clear";
     }
 
-//    1 - envia type | url_references ; url | url
-//    2 - recebe type | url_references ; item_count | 123 ; url | dsaf ; url | asdfa ...
+//    1 - envia type | url_references ; uuid | uuid_example ; url | url
+//    2 - recebe type | url_references ; uuid | uuid_example ; item_count | 123 ; url | dsaf ; url | asdfa ...
     public String pagesList(String url) throws RemoteException {
-        request = "type | url_references ; url | " + url;
-        String resposta = dealWithRequest(request);
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | url_references ; uuid | " + uuid;
+        request = confirmRequest + " ; url | " + url;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
 
-        if (resposta.compareTo("type | status ; operation | failed") == 0) return "Any result for " + url;
+        if (answer.contains("failed")) return "Any result for " + url;
 
-        String[] tokens = resposta.split(" ; ");
-        int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
+        String[] tokens = answer.split(" ; ");
+        int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
         String[][] aux = new String[size][];
         String list = "";
 
-        for(int i = 2; i < tokens.length; i++) aux[i - 2] = tokens[i].split(" \\| ");
+        for(int i = 3; i < tokens.length; i++) aux[i - 3] = tokens[i].split(" \\| ");
         for(i = 0; i < aux.length; i++) list += aux[i][1] + "\n";
         System.out.println(list);
         return list;
     }
 
-//    1 - envia type | 10MostImportant
-//    2 - recebe type | 10MostImportant ; url | dsaf ; url | asdfa ...
+//    1 - envia type | 10MostImportant ; uuid | uuid_example
+//    2 - recebe type | 10MostImportant ; uuid | uuid_example ; url | dsaf ; url | asdfa ...
     public String tenMostImportant() throws RemoteException {
-        request = "type | 10MostImportant";
+        uuid = UUID.randomUUID();
+        request = "type | 10MostImportant ; uuid | " + uuid;
         return tenMost(request);
     }
-//    1 - envia type | 10MostSearched
-//    2 - recebe type | 10MostSearched ; url | dsaf ; url | asdfa ...
+
+//    1 - envia type | 10MostSearched ; uuid | uuid_example
+//    2 - recebe type | 10MostSearched ; uuid | uuid_example ; url | dsaf ; url | asdfa ...
     public String tenMostSearched() throws RemoteException {
-        request = "type | 10MostSearched";
+        uuid = UUID.randomUUID();
+        request = "type | 10MostSearched ; uuid | " + uuid;
         return tenMost(request);
     }
 
     private String tenMost(String request) {
-        String resposta = dealWithRequest(request);
+        String answer = dealWithRequest(request);
+        while(!answer.contains(request)){
+            answer = dealWithRequest(request);
+        }
 
-        String[] tokens = resposta.split(" ; ");
-        String[][] aux = new String[tokens.length-1][];
+        String[] tokens = answer.split(" ; ");
+        String[][] aux = new String[tokens.length-2][];
         String ans = "";
 
-        for(int i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
+        for(int i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
         for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
         if (ans.length() == 0) return "No searches done";
         return ans;
     }
 
-//    1 - envia type | search ; text | text
-//    2 - recebe type | search ; item_count | 13241 ; url | adad
+//    1 - envia type | search ; uuid | uuid_example ; text | text
+//    2 - recebe type | search ; uuid | uuid_example ; item_count | 13241 ; url | adad
     public String searchWeb(String searchText, String username) throws RemoteException {
-        request = "type | search ; username | "+ username +" ; text | " + searchText;
-        String resposta = dealWithRequest(request);
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | search ; uuid | " + uuid;
+        request = confirmRequest + " ; username | "+ username +" ; text | " + searchText;
 
-        String[] tokens = resposta.split(" ; ");
+        String answer = dealWithRequest(request);
+
+        while(!answer.contains(confirmRequest)) {
+            answer = dealWithRequest(request);
+        }
+
+        String[] tokens = answer.split(" ; ");
         String[][] aux = new String[tokens.length-2][2];
-        int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
+        int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
         String ans = "";
 
         if(size == 0) {
             return "Any result for your search";
         }
 
-        for(i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
+        for(i = 3; i < tokens.length; i++) aux[i-3] = tokens[i].split(" \\| ");
         for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
         ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
 
-//    usa o get_notifications
-//    1 - envia type | get_notifications ; username | afaf
-//    2 - recebe type | get_notifications ; item_count | 123 ; not | text ...
     public void newClient(int port, String clientIP) throws RemoteException {
         ClientInterface client;
         System.out.println("port: " + port + " | clientIP: " + clientIP);
@@ -362,22 +378,33 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         clientsList.add(client);
     }
 
+    //    usa o get_notifications
+//    1 - envia type | get_notifications ; uuid | uuid_example ; username | afaf
+//    2 - recebe type | get_notifications ; uuid | uuid_example ; item_count | 123 ; not | text ...
     public String verifyNotification(String username) {
-        String answer = dealWithRequest("type | get_notifications ; username | " + username);
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | get_notifications ; uuid | " + uuid;
+        request = confirmRequest + " ; username | " + username;
+        String answer = dealWithRequest(request);
+
+        while(!answer.contains(confirmRequest)) {
+            answer = dealWithRequest(request);
+        }
+
         String[] tokens = answer.split(" ; ");
-        int size = Integer.parseInt(tokens[1].split(" \\| ")[1]);
+        int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
         String[][] aux = new String[tokens.length-2][];
         if (size == 0){
             return "";
         }
-        for (i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
+        for (i = 3; i < tokens.length; i++) aux[i-3] = tokens[i].split(" \\| ");
         for (i = 0; i < aux.length; i++) sendNotification(aux[i][1], username);
         return answer;
     }
 
 //    caso o user nao esteja online
-//    1 - envia type | notification ; username | user ; message | sdaads
-//    2 - recebe qualquer coisa
+//    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
+//    2 -  ; uuid | uuid_example
     private void sendNotification(String s, String user) {
         System.out.println("Notification: " + s + ": to user " + user);
         for (ClientInterface client : clientsList) {
@@ -395,18 +422,28 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         System.out.println("O cliente nao esta online");
-
-        request = "type | notification ; username | " + user + " ; message | " + s;
-        dealWithRequest(request);
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | notification ; uuid | " + uuid;
+        request = confirmRequest + " ; username | " + user + " ; message | " + s;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest) && !answer.contains("success")) {
+            answer = dealWithRequest(confirmRequest);
+        }
     }
 
-//    1 - envia type | give_privilege ; username | futureAdmin
-//    2 - recebe type | give_privilege ; operation | succeeded (ou failed)
+//    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
+//    2 - recebe type | give_privilege ; uuid | uuid_example ; operation | succeeded (ou failed)
     public boolean givePrivileges(String usernameOldAdmin, String usernameFutureAdmin) throws RemoteException {
-        request = "type | give_privilege ; username | " + usernameFutureAdmin;
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | give_privilege ; uuid | " + uuid;
+        request = confirmRequest + " ; username | " + usernameFutureAdmin;
 
-        String resposta = dealWithRequest(request);
-        if (resposta.equals("type | status ; operation | success")) {
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest) && !answer.contains("success")) {
+            answer = dealWithRequest(confirmRequest);
+        }
+
+        if (answer.contains("success")) {
             String message = "You are admin now!";
             sendNotification(message, usernameFutureAdmin);
             return true;
