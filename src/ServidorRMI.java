@@ -20,7 +20,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private CopyOnWriteArrayList<ClientInterface> clientsList = new CopyOnWriteArrayList<>();
     private int clientPort = 7000;
     private int i;
-    private String request;
+    private String request, confirmRequest;
     private UUID uuid;
 
     private ServidorRMI() throws RemoteException {
@@ -122,7 +122,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         uuid = UUID.randomUUID();
-        String confirmRequest = "type | newURL ; uuid | " + uuid;
+        confirmRequest = "type | newURL ; uuid | " + uuid;
         request = "type | newURL ; url | " + url + " ; id_server | " + id_server;
         answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -198,11 +198,16 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return message;
     }
 
-//    1 - envia type | logout ; username | username
-//    2 - pode receber qualquer coisa
+//    1 - envia type | logout ; uuid | uuid_example ; username | username
+//    2 - type | logout ; uuid | uuid_example ; status | succeed (ou failed)
     public boolean logout(String user) throws java.rmi.RemoteException {
-        request = "type | logout ; username | " + user;
-        dealWithRequest(request);
+        uuid = UUID.randomUUID();
+        request = "type | logout ; uuid | " + uuid + " ; username | " + user;
+        confirmRequest = "type | logout ; uuid | " + uuid;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest) || answer.contains("failed")){
+            answer = dealWithRequest(request);
+        }
         for (ClientInterface client : clientsList) {
             try {
                 if(client.getUser().equals(user))
@@ -214,40 +219,53 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return true;
     }
 
-//    1 - envia type | register ; username | username ; password | password;
-//    2 - recebe type | status ; operation | failed ou entao type | status ; operation | succeeded ; isAdmin | true (ou false)
+//    1 - envia type | register ; uuid | uuid_example ; username | username ; password | password;
+//    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
     public int register(String username, String password) throws RemoteException {
-        request = "type | register ; username | " + username + " ; password | " + password;
-        String resposta = dealWithRequest(request);
-        if(resposta.equals("type | status ; operation | failed")) return 3;
-        else if (resposta.equals("type | status ; operation | success ; isAdmin | true")) return 1;
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | register ; uuid | "+ uuid;
+        request = "type | register ; uuid | " + uuid + " ; username | " + username + " ; password | " + password;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
+        if(answer.contains("failed")) return 3;
+        else if (answer.contains("true")) return 1;
         else return 2;
     }
 
-//    1 - envia type | login ; username | username ; password | password;
-//    2 - recebe type | status ; operation | failed ou entao type | status ; operation | succeeded ; isAdmin | true (ou false)
+//    1 - envia type | login ; uuid | uuid_example ; username | username ; password | password;
+//    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
     public int login(String username, String password) throws RemoteException {
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | login ; uuid | " + uuid;
         request = "type | login ; username | " + username + " ; password | " + password;
-        String resposta = dealWithRequest(request);
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
 
-        if(resposta.equals("type | status ; operation | failed")) return 3;
-        else if (resposta.equals("type | status ; operation | success ; isAdmin | true")) return 1;
+        if(answer.contains("failed")) return 3;
+        else if (answer.contains("true")) return 1;
         else return 2;
     }
 
-//    1 - envia type | historico ; username | username
-//    2 - recebe type | historico ; value | addas ; value | asfdsa
+//    1 - envia type | historico ; uuid | uuid_example ; username | username
+//    2 - recebe type | historico ; uuid | uuid_example ; value | addas ; value | asfdsa
     public String historic(String user) throws RemoteException {
-        request = "type | historico ; username | " + user;
-        String resposta = dealWithRequest(request);
-        String[][] aux = null;
+        uuid = UUID.randomUUID();
+        request = "type | historico ; uuid | " + uuid + "username | " + user;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
 
-        String[] tokens = resposta.split(" ; ");
-        if (tokens.length > 1){
-            aux = new String[tokens.length-1][];
+        String[] tokens = answer.split(" ; ");
+        if (tokens.length > 2){
+            String[][] aux = new String[tokens.length-2][];
             String ans = "";
 
-            for(i = 1; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
+            for(i = 2; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
             for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
             return ans;
         }
