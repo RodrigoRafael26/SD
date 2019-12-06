@@ -38,6 +38,7 @@ public class ManageRequests extends Thread {
             String msg_id=request.split(" ; ")[1];
             msg_id = msg_id.replace("uuid | ","");
             String parameters = request.replace("type | " + type + " ; ", "");
+            parameters = parameters.replace("uuid | "+msg_id+" ; ","");
             String[] data = parameters.split(" ; ");
 
             System.out.println(type);
@@ -52,6 +53,7 @@ public class ManageRequests extends Thread {
                     boolean isAdmin = false;
                     int id = 1;
                     String resp;
+                    System.out.println();
                     if (server_Storage.getUserList().isEmpty()) {
                         //if user list is empty make first user admin
                         isAdmin = true;
@@ -73,7 +75,7 @@ public class ManageRequests extends Thread {
                     //Create new user object
 
                     User u = new User(username, password, isAdmin, id);
-
+                    System.out.println("user " + u.getUsername());
                     //add user to list
 
                     server_Storage.addUser(u);
@@ -93,7 +95,7 @@ public class ManageRequests extends Thread {
                         if (user.getUsername().compareTo(username) == 0 && user.getPassword().compareTo(password) == 0) {
                             //add user to online users
 
-                            resp = "type | status ; uuid | "+msg_id+" operation | success ; isAdmin | " + user.isAdmin();
+                            resp = "type | status ; uuid | "+msg_id+" ; operation | success ; isAdmin | " + user.isAdmin();
 
                         } else {
                             resp = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
@@ -115,7 +117,7 @@ public class ManageRequests extends Thread {
                     server_Storage.getUser(username).getSearchHistory();
 
                     //send message with all information
-                    resp = "type | historico ; ";
+                    resp = "type | historico ; uuid | " +msg_id+" ; ";
                     u = server_Storage.getUser(username);
                     for (String temp : u.getSearchHistory()) {
                         resp += "item_name | " + temp + " ; ";
@@ -134,7 +136,7 @@ public class ManageRequests extends Thread {
                     //go to hashmap to find the url
                     if (server_Storage.getReferenceHash().get(find_url) != null) {
                         item_count = server_Storage.getReferenceHash().get(find_url).size();
-                        response = "type | url_references ; uuid | "+msg_id+" item_count | " + item_count;
+                        response = "type | url_references ; uuid | "+msg_id+" ; item_count | " + item_count;
                         //add all references to the response message
                         for (String url : server_Storage.getReferenceHash().get(find_url)) {
                             response += " ; item_name | " + url;
@@ -193,7 +195,7 @@ public class ManageRequests extends Thread {
                         pesquisa += s +" ";
                         if (temp == null){
                             opFailed = true;
-                            resp = "type | search ; uuid | "+msg_id+"item_count | 0";
+                            resp = "type | search ; uuid | "+msg_id+" ; item_count | 0";
                             response = resp;
                             break;
                         }
@@ -217,7 +219,7 @@ public class ManageRequests extends Thread {
                         //Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
-                        resp = "type | search ; uuid | "+msg_id+"item_count | " + searchResults.size() + " ; ";
+                        resp = "type | search ; uuid | "+msg_id+"; item_count | " + searchResults.size() + " ; ";
                         String title = "";
                         String citation = "";
                         String order_search;
@@ -291,7 +293,7 @@ public class ManageRequests extends Thread {
                     //sort array by
                     Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
 
-                    resp = "type | 10MostImportant ; uuid | "+msg_id;
+                    resp = "type | 10MostImportant ; uuid | "+msg_id+" ; ";
 
                     if (mostImportant.length >= 10) {
                         for (int i = 0; i < 10; i++) {
@@ -331,7 +333,7 @@ public class ManageRequests extends Thread {
                     //order array by the frequency of each search term
                     Arrays.sort(ordered_array, new terms_Comparator(termFrequency));
 
-                    resp = "type | 10MostSearched ; uuid | "+msg_id;
+                    resp = "type | 10MostSearched ; uuid | "+msg_id+" ; ";
                     if (ordered_array.length >= 10) {
                         for (int i = 0; i < 10; i++) {
                             resp += "item_name | " + ordered_array[i] + " ; ";
@@ -350,15 +352,15 @@ public class ManageRequests extends Thread {
                     username = data[0].replace("username | ", "");
                     User user = server_Storage.getUser(username);
 
-                    //create a message qith all user pending notifications
-                    String notifications = "type | notifications ; uuid | "+msg_id+"item_count | " + user.getNotifications().size();
+                    //create a message with all user pending notifications
+                    String notifications = "type | notifications ; uuid | "+msg_id+" ; item_count | " + user.getNotifications().size();
                     if (user.getNotifications() != null) {
 
                         for (String temp : user.getNotifications()) {
                             notifications += " ; item_name | " + temp;
                         }
                     }
-
+                    System.out.println("");
                     //if information checks send notification
                     this.response = notifications;
                     user.getNotifications().clear();
@@ -411,7 +413,7 @@ public class ManageRequests extends Thread {
 
                 case "getOnlineServer":
                     //this is for RMI server
-                    resp = "type | getOnlineServer ; uuid | "+msg_id;
+                    resp = "type | getOnlineServer ; uuid | "+msg_id+" ; ";
                     if(lastPingSent.keySet().size()==1){
                         resp += "item_id | " + server_Storage.getServerConfig().getServer_ID() + " ; workload | " + server_Storage.getServerConfig().getWorkload() + " ; ";
 

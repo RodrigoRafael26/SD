@@ -176,12 +176,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 socket.setSoTimeout(5000);
                 socket.receive(packet);
 
-////                ja recebeu o tamanho do buffer e agora vai receber a resposta ao request
-//                message = new String(packet.getData(), 0, packet.getLength());
-//                int bufferLength = Integer.parseInt(message.trim());
-//                buffer = new byte[bufferLength];
-//                packet = new DatagramPacket(buffer, buffer.length);
-//                socket.receive(packet);
 
                 message = new String(packet.getData(), 0, packet.getLength());
                 System.out.println("Received packet from " + packet.getAddress().getHostName() + ":" + packet.getPort() + " with message: " + message);
@@ -240,11 +234,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public int login(String username, String password) throws RemoteException {
         uuid = UUID.randomUUID();
         confirmRequest = "type | status ; uuid | " + uuid;
-        request = "type | login ; username | " + username + " ; password | " + password;
+        request = "type | login ; uuid | "+uuid+" ; username | " + username + " ; password | " + password;
         String answer = dealWithRequest(request);
-        while(!answer.contains(confirmRequest)){
-            answer = dealWithRequest(request);
-        }
+//        while(!answer.contains(confirmRequest)){
+//            answer = dealWithRequest(request);
+//        }
 
         if(answer.contains("failed")) return 3;
         else if (answer.contains("true")) return 1;
@@ -384,13 +378,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | get_notifications ; uuid | uuid_example ; item_count | 123 ; not | text ...
     public String verifyNotification(String username) {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | get_notifications ; uuid | " + uuid;
-        request = confirmRequest + " ; username | " + username;
+        confirmRequest = "type |  notifications ; uuid | " + uuid;
+        request = "type |  get_notifications ; uuid | " + uuid + " ; username | " + username;
         String answer = dealWithRequest(request);
 
-        while(!answer.contains(confirmRequest)) {
-            answer = dealWithRequest(request);
-        }
+//        while(!answer.contains(confirmRequest)) {
+//            answer = dealWithRequest(request);
+//        }
 
         String[] tokens = answer.split(" ; ");
         int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
