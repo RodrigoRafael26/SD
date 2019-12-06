@@ -35,8 +35,9 @@ public class ManageRequests extends Thread {
             this.request = server_Storage.getRequest();
             String type = request.split(" ; ")[0];
             type = type.replace("type | ","");
+            String msg_id=request.split(" ; ")[1];
+            msg_id = msg_id.replace("uuid | ","");
             String parameters = request.replace("type | " + type + " ; ", "");
-
             String[] data = parameters.split(" ; ");
 
             System.out.println(type);
@@ -55,17 +56,17 @@ public class ManageRequests extends Thread {
                         //if user list is empty make first user admin
                         isAdmin = true;
                         id = 1;
-                        resp = "type | status ; operation | success ; isAdmin | true" ;
+                        resp = "type | status ; uuid | "+msg_id+" ; operation | success ; isAdmin | true" ;
 
                     } else {
                         if (server_Storage.getUser(username) != null) {
-                            resp = "type | status ; operation | failed";
+                            resp = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
 
                         } else {
 
                             isAdmin = false;
                             id = server_Storage.getUserList().size() + 1;
-                            resp = "type | status ; operation | success ; isAdmin | false";
+                            resp = "type | status ; uuid | "+msg_id+" ; operation | success ; isAdmin | false" ;
                         }
                     }
 
@@ -92,15 +93,15 @@ public class ManageRequests extends Thread {
                         if (user.getUsername().compareTo(username) == 0 && user.getPassword().compareTo(password) == 0) {
                             //add user to online users
 
-                            resp = "type | status ; operation | success ; isAdmin | " + user.isAdmin();
+                            resp = "type | status ; uuid | "+msg_id+" operation | success ; isAdmin | " + user.isAdmin();
 
                         } else {
-                            resp = "type | status ; operation | failed";
+                            resp = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
                         }
                     } else {
 
                         //send message saying user doesnt exist
-                        resp = "type | status ; operation | failed";
+                        resp = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
 
                     }
 
@@ -133,7 +134,7 @@ public class ManageRequests extends Thread {
                     //go to hashmap to find the url
                     if (server_Storage.getReferenceHash().get(find_url) != null) {
                         item_count = server_Storage.getReferenceHash().get(find_url).size();
-                        response = "type | url_references ; item_count | " + item_count;
+                        response = "type | url_references ; uuid | "+msg_id+" item_count | " + item_count;
                         //add all references to the response message
                         for (String url : server_Storage.getReferenceHash().get(find_url)) {
                             response += " ; item_name | " + url;
@@ -141,7 +142,7 @@ public class ManageRequests extends Thread {
 
                     } else {
                         //send message saying the URL doesnt exist
-                        response = "type | status ; operation | failed";
+                        response = "type | status ; uuid | "+msg_id+" ; operation | failed" ;;
                     }
 
                     break;
@@ -161,7 +162,7 @@ public class ManageRequests extends Thread {
                     //Make sure the link can be read by jsoup
                     if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://"))
                         newUrl = "http://".concat(newUrl);
-                    response = "type | status ; operation | success";
+                    response = "type | status ; uuid | "+msg_id+" ; operation | success" ;
 
                     //if jsoup cant connect to link means the url is invalid
                     try {
@@ -170,7 +171,7 @@ public class ManageRequests extends Thread {
                         //tell admin the user he asked for is not available
                         System.out.println(e.getMessage());
                         System.out.println(newUrl);
-                        response = "type | status ; operation | failed";
+                        response = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
                         break;
                     }
                     server_Storage.addLinkToQueue(newUrl);
@@ -192,7 +193,7 @@ public class ManageRequests extends Thread {
                         pesquisa += s +" ";
                         if (temp == null){
                             opFailed = true;
-                            resp = "type | search ; item_count | 0";
+                            resp = "type | search ; uuid | "+msg_id+"item_count | 0";
                             response = resp;
                             break;
                         }
@@ -216,7 +217,7 @@ public class ManageRequests extends Thread {
                         //Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
-                        resp = "type | search ; item_count | " + searchResults.size() + " ; ";
+                        resp = "type | search ; uuid | "+msg_id+"item_count | " + searchResults.size() + " ; ";
                         String title = "";
                         String citation = "";
                         String order_search;
@@ -262,14 +263,14 @@ public class ManageRequests extends Thread {
                         server_Storage.getUser(username).changeUserToAdmin();
                         //send message to admin saying operation successful
 
-                        resp = "type | status ; operation | success";
+                        resp ="type | status ; uuid | "+msg_id+" ; operation | success";
                         //send notification to user saying he is now an admin
                         String notification = "You are now an admin";
                         server_Storage.getUser(username).addNotifications(notification);
 
                     } else {
                         //send message saying user doesnt exist
-                        resp = "type | status ; operation | failed";
+                        resp = "type | status ; uuid | "+msg_id+" ; operation | failed" ;
                     }
                     this.response = resp;
 
@@ -279,7 +280,7 @@ public class ManageRequests extends Thread {
                     username = data[0].replace("username | ", "");
                     //remove user from online users
                     server_Storage.disconnectUser(username);
-                    resp = "type | status ; operation | success";
+                    resp = "type | status ; uuid | "+msg_id+" ; operation | success" ;
                     this.response = resp;
                     break;
 
@@ -290,7 +291,7 @@ public class ManageRequests extends Thread {
                     //sort array by
                     Arrays.sort(mostImportant, new URL_Comparator(server_Storage));
 
-                    resp = "type | 10MostImportant ; ";
+                    resp = "type | 10MostImportant ; uuid | "+msg_id;
 
                     if (mostImportant.length >= 10) {
                         for (int i = 0; i < 10; i++) {
@@ -330,7 +331,7 @@ public class ManageRequests extends Thread {
                     //order array by the frequency of each search term
                     Arrays.sort(ordered_array, new terms_Comparator(termFrequency));
 
-                    resp = "type | 10MostSearched ; ";
+                    resp = "type | 10MostSearched ; uuid | "+msg_id;
                     if (ordered_array.length >= 10) {
                         for (int i = 0; i < 10; i++) {
                             resp += "item_name | " + ordered_array[i] + " ; ";
@@ -350,7 +351,7 @@ public class ManageRequests extends Thread {
                     User user = server_Storage.getUser(username);
 
                     //create a message qith all user pending notifications
-                    String notifications = "type | notifications ; item_count | " + user.getNotifications().size();
+                    String notifications = "type | notifications ; uuid | "+msg_id+"item_count | " + user.getNotifications().size();
                     if (user.getNotifications() != null) {
 
                         for (String temp : user.getNotifications()) {
@@ -410,7 +411,7 @@ public class ManageRequests extends Thread {
 
                 case "getOnlineServer":
                     //this is for RMI server
-                    resp = "type | getOnlineServer ; ";
+                    resp = "type | getOnlineServer ; uuid | "+msg_id;
                     if(lastPingSent.keySet().size()==1){
                         resp += "item_id | " + server_Storage.getServerConfig().getServer_ID() + " ; workload | " + server_Storage.getServerConfig().getWorkload() + " ; ";
 
