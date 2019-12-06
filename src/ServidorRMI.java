@@ -200,7 +200,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
 //    1 - envia type | logout ; uuid | uuid_example ; username | username
-//    2 - type | logout ; uuid | uuid_example ; status | succeed (ou failed)
+//    2 - recebe type | logout ; uuid | uuid_example ; status | succeed (ou failed)
     public boolean logout(String user) throws java.rmi.RemoteException {
         uuid = UUID.randomUUID();
         request = "type | logout ; uuid | " + uuid + " ; username | " + user;
@@ -224,7 +224,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
     public int register(String username, String password) throws RemoteException {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | register ; uuid | "+ uuid;
+        confirmRequest = "type | status ; uuid | "+ uuid;
         request = "type | register ; uuid | " + uuid + " ; username | " + username + " ; password | " + password;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -239,7 +239,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
     public int login(String username, String password) throws RemoteException {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | login ; uuid | " + uuid;
+        confirmRequest = "type | status ; uuid | " + uuid;
         request = "type | login ; username | " + username + " ; password | " + password;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -255,7 +255,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | historico ; uuid | uuid_example ; value | addas ; value | asfdsa
     public String historic(String user) throws RemoteException {
         uuid = UUID.randomUUID();
-        request = "type | historico ; uuid | " + uuid + "username | " + user;
+        confirmRequest = "type | historico ; uuid | " + uuid;
+        request = confirmRequest + "username | " + user;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
@@ -404,7 +405,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
 //    caso o user nao esteja online
 //    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
-//    2 -  ; uuid | uuid_example
+//    2 - recebe type | notification ; uuid | uuid_example
     private void sendNotification(String s, String user) {
         System.out.println("Notification: " + s + ": to user " + user);
         for (ClientInterface client : clientsList) {
