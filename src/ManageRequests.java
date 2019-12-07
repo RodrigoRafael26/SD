@@ -114,6 +114,7 @@ public class ManageRequests extends Thread {
                     break;
 
                 case "historico":
+
                     username = data[0].replace("username | ", "");
                     //get search info from personal info
                     server_Storage.getUser(username).getSearchHistory();
@@ -221,7 +222,7 @@ public class ManageRequests extends Thread {
                         //Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
-                        resp = "type | search ; uuid | "+msg_id+"; item_count | " + searchResults.size() + " ; ";
+                        resp = "type | search ; uuid | "+msg_id+" ; item_count | " + searchResults.size() + " ; ";
                         String title = "";
                         String citation = "";
                         String order_search;
