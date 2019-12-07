@@ -36,7 +36,9 @@ public class ManageRequests extends Thread {
             String type = request.split(" ; ")[0];
             type = type.replace("type | ","");
             String msg_id=request.split(" ; ")[1];
+
             msg_id = msg_id.replace("uuid | ","");
+            System.out.println(msg_id);
             String parameters = request.replace("type | " + type + " ; ", "");
             parameters = parameters.replace("uuid | "+msg_id+" ; ","");
             String[] data = parameters.split(" ; ");
@@ -301,7 +303,7 @@ public class ManageRequests extends Thread {
                         }
                     } else {
                         for (String s : mostImportant) {
-    //                    System.out.println(s);
+                            //                    System.out.println(s);
                             resp += "item_name | " + s + " ; ";
                         }
 
