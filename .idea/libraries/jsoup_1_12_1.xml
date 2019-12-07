@@ -1,6 +1,8 @@
 <component name="libraryTable">
   <library name="jsoup-1.12.1">
-    <CLASSES />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Dropbox/Apps/NONIO-Inforestudante/Licenciatura em Engenharia Informática/2019 2020/1.º Semestre/Sistemas Distribuídos/jsoupExample/lib/jsoup-1.12.1.jar!/" />
+    </CLASSES>
     <JAVADOC />
     <SOURCES />
   </library>

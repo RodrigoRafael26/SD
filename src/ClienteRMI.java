@@ -23,7 +23,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return serverInterface;
     }
 
-//    tenta conectar ao registry backup
+    //    tenta conectar ao registry backup
     private static void setClientInterface() throws RemoteException {
         while (true) {
             try {
@@ -41,7 +41,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-//    inicio do programa
+    //    inicio do programa
     public static void main(String[] args) throws IOException {
         RMIhost = args[0];
         myHost = args[1];
@@ -67,7 +67,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         return user;
     }
 
-//    procura o registry do servidor RMI
+    //    procura o registry do servidor RMI
     private static void startsRMIConnection() {
         try {
             serverInterface = (ServerInterface) LocateRegistry.getRegistry(RMIhost, 7000).lookup("Sporting");
@@ -76,7 +76,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-//    procura o registry novamente, incrementa o porto e caso ja seja durante a usabilidade de um user passa a funcao setClienteInterface
+    //    procura o registry novamente, incrementa o porto e caso ja seja durante a usabilidade de um user passa a funcao setClienteInterface
     private static void retryRMIConnection() {
         while (true) {
             try {
@@ -261,7 +261,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
                 retryRMIConnection();
             }
         }
-        
+
     }
 
     private static void validationMenu(int option) throws RemoteException {
