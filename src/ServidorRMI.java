@@ -106,25 +106,27 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         int menor = -1;
         String id_server = null;
 
-        for (i = 2; i <= nrServers; i++) {
+        for (i = 1; i <= nrServers; i++) {
+            System.out.println("ENTROU NESTE LOOP");
             aux[i-1][0] = tokens[2*i - 1].split(" \\| ")[1];
             aux[i-1][1] = tokens[2*i].split(" \\| ")[1];
         }
 
         for(i = 0; i < aux.length; i++){
             if (menor == -1){
+                System.out.println(aux[i][1]);
                 menor = Integer.parseInt(aux[i][1]);
-                id_server = aux[i][0];
+//                id_server = aux[i][0];
             }
             if(Integer.parseInt(aux[i][1]) < menor){
                 menor = Integer.parseInt(aux[i][1]);
-                id_server = aux[i][0];
+//                id_server = aux[i][0];
             }
         }
-
+        id_server = ""+menor;
         uuid = UUID.randomUUID();
-        confirmRequest = "type | newURL ; uuid | " + uuid;
-        request = "type | newURL ; url | " + url + " ; id_server | " + id_server;
+        confirmRequest = "type | status ; uuid | " + uuid;
+        request = "type | newURL ; uuid | " +uuid+" ; url | " + url + " ; id_server | " + id_server;
         answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
