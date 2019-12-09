@@ -107,7 +107,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String id_server = null;
 
         for (i = 1; i <= nrServers; i++) {
-            System.out.println("ENTROU NESTE LOOP");
             aux[i-1][0] = tokens[2*i - 1].split(" \\| ")[1];
             aux[i-1][1] = tokens[2*i].split(" \\| ")[1];
         }
@@ -132,7 +131,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             answer = dealWithRequest(request);
         }
 
-        return answer.split(" ; ")[1].split(" \\| ")[1];
+        return answer.split(" ; ")[2].split(" \\| ")[1];
     }
 
     public int addPort() throws RemoteException {
