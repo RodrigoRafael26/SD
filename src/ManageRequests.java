@@ -114,6 +114,7 @@ public class ManageRequests extends Thread {
                     break;
 
                 case "historico":
+
                     username = data[0].replace("username | ", "");
                     //get search info from personal info
                     server_Storage.getUser(username).getSearchHistory();

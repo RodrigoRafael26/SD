@@ -252,7 +252,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public String historic(String user) throws RemoteException {
         uuid = UUID.randomUUID();
         confirmRequest = "type | historico ; uuid | " + uuid;
-        request = confirmRequest + "username | " + user;
+        request = confirmRequest + " ; username | " + user;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
@@ -263,7 +263,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             String[][] aux = new String[tokens.length-2][];
             String ans = "";
 
-            for(i = 2; i < tokens.length; i++) aux[i-1] = tokens[i].split(" \\| ");
+            for(i = 2; i < tokens.length; i++) aux[i-2] = tokens[i].split(" \\| ");
             for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
             return ans;
         }
@@ -341,6 +341,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
         String[] tokens = answer.split(" ; ");
         String[][] aux = new String[tokens.length-2][2];
+
         int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
         String ans = "";
 
