@@ -273,7 +273,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | url_references ; uuid | uuid_example ; item_count | 123 ; url | dsaf ; url | asdfa ...
     public String pagesList(String url) throws RemoteException {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | status ; uuid | " + uuid;
+        confirmRequest = "type | url_references ; uuid | " + uuid;
         request = "type | url_references ; uuid | " + uuid + " ; url | " + url;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -379,6 +379,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    1 - envia type | get_notifications ; uuid | uuid_example ; username | afaf
 //    2 - recebe type | get_notifications ; uuid | uuid_example ; item_count | 123 ; not | text ...
     public String verifyNotification(String username) {
+        String resposta = "";
         uuid = UUID.randomUUID();
         confirmRequest = "type | notifications ; uuid | " + uuid;
         request = "type | get_notifications ; uuid | " + uuid + " ; username | " + username;
@@ -395,31 +396,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return "";
         }
         for (i = 3; i < tokens.length; i++) aux[i-3] = tokens[i].split(" \\| ");
-        System.out.println(aux[0].length);
-        for (i = 0; i < (aux.length/2); i++) sendNotification(aux[i][1], username);
-        return answer;
+        for (i = 0; i < (aux.length/2); i++) resposta += aux[i][1]+"\n";
+        return resposta;
     }
 
-    //    caso o user nao esteja online
 //    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
 //    2 - recebe type | notification ; uuid | uuid_example
-    private void sendNotification(String s, String user) {
-        System.out.println("Notification: " + s + ": to user " + user);
-        for (ClientInterface client : clientsList) {
-            try {
-                if (client.getUser() == null)
-                    continue;
-                if (client.getUser().equals(user)){
-                    client.notification(s);
-                    return;
-                }
-            } catch (RemoteException e) {
-                clientsList.remove(client);
-                System.out.println("Out of list");
-            }
-        }
-
-        System.out.println("O cliente nao esta online");
+    public void sendNotification(String s, String user) {
         uuid = UUID.randomUUID();
         confirmRequest = "type | notification ; uuid | " + uuid;
         request = confirmRequest + " ; username | " + user + " ; message | " + s;

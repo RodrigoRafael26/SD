@@ -15,4 +15,5 @@ public interface ServerInterface extends Remote {
     public void ping() throws java.rmi.RemoteException;
     public String newURL(String url) throws java.rmi.RemoteException;
     public String verifyNotification(String user) throws java.rmi.RemoteException;
+    public void sendNotification(String message, String user) throws java.rmi.RemoteException;
 }
