@@ -19,10 +19,8 @@ public class ServerConfig implements Serializable {
         this.server_ID = server_ID;
         this.workload = 0;
         this.hostname = hostname;
-//        InetAddress tcp_address = InetAddress.getLocalHost();
-//        this.hostname = tcp_address.getHostAddress();
-
     }
+
     public String getHostname(){
         return hostname;
     }

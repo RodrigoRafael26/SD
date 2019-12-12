@@ -13,6 +13,23 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+
+import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.model.OAuthRequest;
+import com.github.scribejava.core.model.Response;
+import com.github.scribejava.core.model.Verb;
+import com.github.scribejava.core.model.Token;
+import com.github.scribejava.core.model.Verifier;
+import com.github.scribejava.core.oauth.OAuthService;
+
+import uc.sd.apis.FacebookApi2;
+
+import static com.github.scribejava.core.model.OAuthConstants.EMPTY_TOKEN;
+
 public class ServidorRMI extends UnicastRemoteObject implements ServerInterface {
     private static ServerInterface serverInterface;
     //passar parametros multicast por parametro / file
@@ -23,6 +40,16 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private int i;
     private String request, confirmRequest;
     private UUID uuid;
+
+    public String apiKey = "437779406889234";
+    public String apiSecret = "719d5061f341819d7ec6dec5f1ba17a0";
+    public OAuthService service = new ServiceBuilder()
+                .provider(FacebookApi2.class)
+                .apiKey(apiKey)
+                .apiSecret(apiSecret)
+                .callback("https://localhost:8443/ucBusca/loginFBSuccess") // Do not change this.
+                .scope("public_profile")
+                .build();
 
     private ServidorRMI() throws RemoteException {
     }
@@ -349,8 +376,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         for(i = 3; i < tokens.length; i++) aux[i-3] = tokens[i].split(" \\| ");
-        for(i = 0; i < aux.length; i++) ans += aux[i][1] + "\n";
-        ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
+        for(i = 0; i < aux.length; i++) {
+            if(aux[i][1]!=null){
+
+                ans += aux[i][1] + "\n";
+            }
+        }
+        //ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
 
@@ -400,6 +432,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return resposta;
     }
 
+
+    //    caso o user nao esteja online
 //    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
 //    2 - recebe type | notification ; uuid | uuid_example
     public void sendNotification(String s, String user) {
@@ -431,5 +465,47 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
         return false;
     }
+
+
+    @Override
+    public String loginFacebook() throws RemoteException {
+        String NETWORK_NAME = "Facebook";
+
+        System.out.println("=== " + NETWORK_NAME + "'s OAuth Workflow ===");
+        String authorizationUrl =  this.service.getAuthorizationUrl(null);
+
+        System.out.println(authorizationUrl);
+
+        return authorizationUrl;
+
+    }
+
+    @Override
+    public int facebookSucccess(String code) throws RemoteException {
+        String PROTECTED_RESOURCE_URL = "https://graph.facebook.com/me";
+        Token user_token;
+        Verifier verifier = new Verifier(code);
+
+
+        // Trade the Request Token and Verfier for the Access Token
+        Token accessToken = service.getAccessToken(null, verifier);
+        System.out.println("Got the Access Token!");
+        System.out.println("(if your curious it looks like this: " + accessToken + " )");
+        System.out.println();
+
+        // Now let's go and ask for a protected resource!
+        System.out.println("Now we're going to access a protected resource...");
+        OAuthRequest request = new OAuthRequest(Verb.GET, PROTECTED_RESOURCE_URL, service);
+        service.signRequest(accessToken, request);
+        Response response = request.send();
+        System.out.println("Got it! Lets see what we found...");
+        System.out.println();
+        System.out.println(response.getCode());
+        System.out.println(response.getBody());
+
+
+        return 0;
+    }
+
 }
 

@@ -219,7 +219,7 @@ public class ManageRequests extends Thread {
                         String[] array = listToArray(searchResults);
 
                         //sort array by importance (number of links that reference eachURL)
-                        //Arrays.sort(array, new URL_Comparator(server_Storage));
+                        Arrays.sort(array, new URL_Comparator(server_Storage));
 
                         //convert search results to string and send response
                         resp = "type | search ; uuid | "+msg_id+" ; item_count | " + searchResults.size() + " ; ";
@@ -235,7 +235,7 @@ public class ManageRequests extends Thread {
                                 try {
                                     Document doc = Jsoup.connect(order_search).get();
                                     title = doc.title();
-                                    citation = doc.text().substring(0, 20);
+                                    citation = doc.text().substring(0, 150);
                                 } catch (Exception e) {
                                     continue;
                                 }
@@ -499,7 +499,13 @@ class URL_Comparator implements Comparator<String> {
 
     @Override
     public int compare(String o1, String o2) {
-        return st.getReferenceHash().get(o1).size() - st.getReferenceHash().get(o2).size();
+//
+        if(st.getReferenceHash().get(o1) != null && st.getReferenceHash().get(o2)!=null){
+
+            return st.getReferenceHash().get(o1).size() - st.getReferenceHash().get(o2).size();
+        }else{
+            return 0;
+        }
     }
 }
 
