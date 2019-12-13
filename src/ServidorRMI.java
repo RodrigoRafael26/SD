@@ -1,10 +1,8 @@
 import java.io.IOException;
-import java.rmi.AccessException;
+import java.rmi.*;
 import java.rmi.ConnectException;
 import java.rmi.registry.Registry;
 import java.net.*;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
@@ -59,7 +57,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public static void main(String[] args) throws RemoteException {
         PORT = Integer.parseInt(args[0]);
         MULTICAST_ADDRESS = args[1];
+
         try {
+
             serverInterface = new ServidorRMI();
             createRegistry();
         } catch (RemoteException | InterruptedException e) {
@@ -269,7 +269,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
         }
-
+        System.out.println(clientsList.size());
         if(answer.contains("failed")) return 3;
         else if (answer.contains("true")) return 1;
         else return 2;
@@ -364,6 +364,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String answer = dealWithRequest(request);
 
         while(!answer.contains(confirmRequest)) {
+            System.out.println("AQui");
             answer = dealWithRequest(request);
         }
 
