@@ -379,7 +379,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
 
     public void notification (String message){
         System.out.println("NOTIFICACAO");
-        if(message.compareTo("You are now an admin") == 0 || message.compareTo("You are admin now!") == 0)
+        if(message.contains("admin"))
             perk = 1;
         System.out.println(message);
     }

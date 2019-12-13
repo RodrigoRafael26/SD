@@ -300,7 +300,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | url_references ; uuid | uuid_example ; item_count | 123 ; url | dsaf ; url | asdfa ...
     public String pagesList(String url) throws RemoteException {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | url_references ; uuid | " + uuid;
+        confirmRequest = "type | status ; uuid | " + uuid;
         request = "type | url_references ; uuid | " + uuid + " ; url | " + url;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -412,6 +412,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | get_notifications ; uuid | uuid_example ; item_count | 123 ; not | text ...
     public String verifyNotification(String username) {
         String resposta = "";
+        int size = 0;
         uuid = UUID.randomUUID();
         confirmRequest = "type | notifications ; uuid | " + uuid;
         request = "type | get_notifications ; uuid | " + uuid + " ; username | " + username;
@@ -422,7 +423,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         String[] tokens = answer.split(" ; ");
-        int size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
+        try {
+            size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+        }
         String[][] aux = new String[tokens.length-2][];
         if (size == 0){
             return "";
@@ -437,6 +442,19 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
 //    2 - recebe type | notification ; uuid | uuid_example
     public void sendNotification(String s, String user) {
+        for (ClientInterface c : clientsList) {
+            try {
+                if (c.getUser() == null)
+                    continue;
+                if (c.getUser().equals(user)) {
+                    c.notification(s);
+                    return;
+                }
+            } catch (RemoteException e) {
+                clientsList.remove(c);
+                System.out.println("saiu da lista");
+            }
+        }
         uuid = UUID.randomUUID();
         confirmRequest = "type | notification ; uuid | " + uuid;
         request = confirmRequest + " ; username | " + user + " ; message | " + s;
@@ -446,7 +464,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
     }
 
-    //    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
+//    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
 //    2 - recebe type | give_privilege ; uuid | uuid_example ; operation | succeeded (ou failed)
     public boolean givePrivileges(String usernameOldAdmin, String usernameFutureAdmin) throws RemoteException {
         uuid = UUID.randomUUID();
@@ -465,7 +483,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
         return false;
     }
-
 
     @Override
     public String loginFacebook() throws RemoteException {
