@@ -19,4 +19,5 @@ public interface ServerInterface extends Remote {
     public String loginFacebook() throws java.rmi.RemoteException;
     public String facebookSucccess(String code) throws java.rmi.RemoteException;
     public void sendNotification(String message, String user) throws java.rmi.RemoteException;
+    public String linkFacebook(String username, String fb_id) throws java.rmi.RemoteException;
 }

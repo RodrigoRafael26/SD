@@ -489,7 +489,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     @Override
     public String loginFacebook() throws RemoteException {
-        String NETWORK_NAME = "Facebook";
+//        String NETWORK_NAME = "Facebook";
 
         String authorizationUrl =  this.service.getAuthorizationUrl(null);
 
@@ -564,6 +564,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         return resp;
+    }
+
+    @Override
+    public String linkFacebook(String username, String fb_id){
+        return "";
     }
 
 }
