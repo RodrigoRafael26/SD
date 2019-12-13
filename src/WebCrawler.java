@@ -32,7 +32,7 @@ public class WebCrawler extends Thread{
 
     //A função indexLinks vai ser iterativa
     private void indexLinks() {
-            if(counter>500) {
+            if(counter<500) {
 
                 try {
                     String ws = st.getLink();
