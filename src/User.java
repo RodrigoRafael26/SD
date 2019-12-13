@@ -7,18 +7,24 @@ class User implements Serializable {
     private String username;
     private String password;
     private boolean isAdmin;
+    private String facebookID;
     private CopyOnWriteArrayList<String> searchHistory;
     private CopyOnWriteArrayList<String> notifications;
     private int userID;
 
-    User(String username, String password, boolean isAdmin, int userID) {
+    User(String username, String password, boolean isAdmin, int userID, String facebookID) {
         this.username = username;
         this.password = password;
         this.isAdmin = isAdmin;
         this.searchHistory = new CopyOnWriteArrayList<>();
         this.notifications = new CopyOnWriteArrayList<>();
         this.userID = userID;
+        this.facebookID = facebookID;
 
+    }
+
+    public String getFB_id(){
+        return this.facebookID;
     }
 
     public boolean isAdmin() {

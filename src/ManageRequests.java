@@ -49,6 +49,7 @@ public class ManageRequests extends Thread {
                     //parse the request
                     String username = data[0].replace("username | ", "");
                     String password = data[1].replace("password | ", "");
+                    String facebookID = data[2].replace("facebookID | ", "");
 
 
                     //do not allow duplicate users
@@ -76,7 +77,7 @@ public class ManageRequests extends Thread {
 
                     //Create new user object
 
-                    User u = new User(username, password, isAdmin, id);
+                    User u = new User(username, password, isAdmin, id, facebookID);
                     System.out.println("user " + u.getUsername());
                     //add user to list
 
@@ -427,6 +428,27 @@ public class ManageRequests extends Thread {
                         }
                     }
                     response = resp;
+                    break;
+
+                case "associate_account":
+
+                    break;
+
+                case "get_fb_user":
+                    System.out.println("entrou");
+                    String fb_id = data[0].replace("fb_id | ","");
+                    User aux_user = server_Storage.getUserFBid(fb_id);
+                    System.out.println("FB_ID===="+fb_id);
+                    if(aux_user != null){
+                        if(aux_user.isAdmin())
+                            resp = "type | get_fb_user ; uuid | " + msg_id + " ; username | "+aux_user.getUsername() +" ; perk | 1";
+                        else{
+                            resp = "type | get_fb_user ; uuid | " + msg_id + " ; username | "+aux_user.getUsername() +" ; perk | 2";
+                        }
+                    }else{
+                        resp ="type | get_fb_user ; uuid | " + msg_id+" ; failed";
+                    }
+                        response = resp;
                     break;
                 default:
             }

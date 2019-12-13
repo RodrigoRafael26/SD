@@ -1,4 +1,3 @@
-import java.awt.image.BandedSampleModel;
 import java.io.IOException;
 import java.rmi.AccessException;
 import java.rmi.ConnectException;
@@ -26,6 +25,9 @@ import com.github.scribejava.core.model.Token;
 import com.github.scribejava.core.model.Verifier;
 import com.github.scribejava.core.oauth.OAuthService;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import uc.sd.apis.FacebookApi2;
 
 import static com.github.scribejava.core.model.OAuthConstants.EMPTY_TOKEN;
@@ -242,12 +244,12 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         return true;
     }
 
-    //    1 - envia type | register ; uuid | uuid_example ; username | username ; password | password;
+    //    1 - envia type | register ; uuid | uuid_example ; username | username ; password | password ; facebookID | facebookID
 //    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
-    public int register(String username, String password) throws RemoteException {
+    public int register(String username, String password, String facebookID) throws RemoteException {
         uuid = UUID.randomUUID();
         confirmRequest = "type | status ; uuid | "+ uuid;
-        request = "type | register ; uuid | " + uuid + " ; username | " + username + " ; password | " + password;
+        request = "type | register ; uuid | " + uuid + " ; username | " + username + " ; password | " + password + " ; facebookID | "+facebookID  ;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
@@ -488,7 +490,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public String loginFacebook() throws RemoteException {
         String NETWORK_NAME = "Facebook";
 
-        System.out.println("=== " + NETWORK_NAME + "'s OAuth Workflow ===");
         String authorizationUrl =  this.service.getAuthorizationUrl(null);
 
         System.out.println(authorizationUrl);
@@ -498,30 +499,70 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     @Override
-    public int facebookSucccess(String code) throws RemoteException {
+    public String facebookSucccess(String code) throws RemoteException {
         String PROTECTED_RESOURCE_URL = "https://graph.facebook.com/me";
-        Token user_token;
         Verifier verifier = new Verifier(code);
-
-
         // Trade the Request Token and Verfier for the Access Token
         Token accessToken = service.getAccessToken(null, verifier);
-        System.out.println("Got the Access Token!");
-        System.out.println("(if your curious it looks like this: " + accessToken + " )");
-        System.out.println();
 
-        // Now let's go and ask for a protected resource!
-        System.out.println("Now we're going to access a protected resource...");
+//        System.out.println("(if your curious it looks like this: " + accessToken + " )");
+        System.out.println("ENTROU AQQUI");
         OAuthRequest request = new OAuthRequest(Verb.GET, PROTECTED_RESOURCE_URL, service);
         service.signRequest(accessToken, request);
         Response response = request.send();
-        System.out.println("Got it! Lets see what we found...");
-        System.out.println();
-        System.out.println(response.getCode());
-        System.out.println(response.getBody());
+
+        Object obj = null;
+        try {
+            obj = new JSONParser().parse(response.getBody());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        // typecasting obj to JSONObject
+        JSONObject jo = (JSONObject) obj;
+        System.out.println(jo.get("id"));
+        String fb_id = (String) jo.get("id");
+        System.out.println(fb_id);
+
+        int perk = 0;
+        //check if user already exists
+        //type | get_fb_user ; uuid | uuid ; fb_id | fb_id;
+        //recebe type | get_fb_user ; uuid | uuid ; username | username ; perk | perk ;
+        uuid = UUID.randomUUID();
+        String requestMulticast = "type | get_fb_user ; uuid | "+ uuid +" ; fb_id | "+fb_id;
+        System.out.println("AQUI");
+        confirmRequest = "type | get_fb_user ; uuid | " + uuid;
+        String answer = dealWithRequest(requestMulticast);
+
+        while(!answer.contains(confirmRequest)) {
+            answer = dealWithRequest(requestMulticast);
+        }
+        String resp = "";
+        if(answer.contains("failed")){
+            perk = 3;
+        }else {
+            String[] tokens = answer.split(" ; ");
+            String[][] aux = new String[tokens.length - 2][2];
 
 
-        return 0;
+            for (i = 2; i < tokens.length; i++) aux[i - 2] = tokens[i].split(" \\| ");
+
+            String username = aux[0][1];
+            perk = Integer.parseInt(aux[1][1]);
+            resp = "username | "+username+" ; perk | " + perk;
+        }
+
+        if(perk == 1 || perk == 2){
+
+        }else{
+            //se nao existir regista e manda
+            perk = this.register(fb_id,fb_id,fb_id);
+            resp = "username | "+fb_id+" ; perk | " + perk;
+            System.out.println(resp);
+
+        }
+
+        return resp;
     }
 
 }

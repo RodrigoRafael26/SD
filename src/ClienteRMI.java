@@ -293,7 +293,7 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
             while(true) {
                 try {
                     if (option == 1)
-                        verifier = serverInterface.register(username, password);
+                        verifier = serverInterface.register(username, password, "");
                     else if (option == 2)
                         verifier = serverInterface.login(username, password);
                     break;

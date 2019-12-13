@@ -15,11 +15,10 @@ import java.util.*;
 
 public class WebCrawler extends Thread{
     public Storage st;
-    private int indexed_links;
-
+    private int counter;
     public WebCrawler(Storage st){
         this.st = st;
-        this.indexed_links = 0;
+        this.counter = 0;
         System.out.println("começou o web crawler");
         this.start();
     }
@@ -33,62 +32,65 @@ public class WebCrawler extends Thread{
 
     //A função indexLinks vai ser iterativa
     private void indexLinks() {
+            if(counter>500) {
 
-            try {
-                String ws = st.getLink();
-                if (!ws.startsWith("http://") && !ws.startsWith("https://"))
-                    ws = "http://".concat(ws);
+                try {
+                    String ws = st.getLink();
+                    if (!ws.startsWith("http://") && !ws.startsWith("https://"))
+                        ws = "http://".concat(ws);
 
-                Document doc = Jsoup.connect(ws).get();
-                // Title
-                System.out.println(doc.title() + "\n");
+                    Document doc = Jsoup.connect(ws).get();
+                    // Title
+                    System.out.println(doc.title() + "\n");
 
-                // Get all links
-                Elements links = doc.select("a[href]");
-                for (Element link : links) {
-                    // Ignore bookmarks within the page
+                    // Get all links
+                    Elements links = doc.select("a[href]");
+                    for (Element link : links) {
+                        // Ignore bookmarks within the page
 
-                    if (link.attr("href").startsWith("#")) {
-                        continue;
+                        if (link.attr("href").startsWith("#")) {
+                            continue;
+                        }
+
+                        // Shall we ignore local links? Otherwise we have to rebuild them for future parsing
+                        if (!link.attr("href").startsWith("http")) {
+                            continue;
+                        }
+
+                        //index links
+                        String s = link.attr("href");
+
+
+                        st.addReferenceToHash(ws, s);
+
+                        //Add links to a queue
+                        st.addLinkToQueue(s);
+
+
+                        // Get website text
+                        String text = doc.text();
+                        indexWords(text, ws);
                     }
 
-                    // Shall we ignore local links? Otherwise we have to rebuild them for future parsing
-                    if (!link.attr("href").startsWith("http")) {
-                        continue;
-                    }
 
-                    //index links
-                    String s = link.attr("href");
+                } catch (UnsupportedMimeTypeException e) {
 
-
-                    st.addReferenceToHash(ws, s);
-
-                    //Add links to a queue
-                    st.addLinkToQueue(s);
-
-
-                    // Get website text
-                    String text = doc.text();
-                    indexWords(text, ws);
-
+                    //remove link from reference index (vai criar problemas com a partilha de urls)
+                    indexLinks();
+                } catch (HttpStatusException e) {
+                    //remove link from reference index (vai criar problemas com a partilha de urls)
+                    System.out.println("404");
+                    indexLinks();
+                } catch (IOException e) {
+                    indexLinks();
+                    e.printStackTrace();
                 }
-
-
-
-
-            } catch (UnsupportedMimeTypeException e){
-
-                //remove link from reference index (vai criar problemas com a partilha de urls)
+                counter++;
                 indexLinks();
-            } catch (HttpStatusException e){
-                //remove link from reference index (vai criar problemas com a partilha de urls)
-                System.out.println("404");
-                indexLinks();
-            } catch (IOException e) {
-                indexLinks();
-                e.printStackTrace();
+            }else{
+                st.getLinkList().clear();
+                this.counter = 0;
             }
-            indexLinks();
         System.out.println(st.getLinkList().size());
     }
 

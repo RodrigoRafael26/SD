@@ -3,7 +3,7 @@ import java.rmi.*;
 public interface ServerInterface extends Remote {
     public int addPort() throws java.rmi.RemoteException;
     public boolean logout(String user) throws java.rmi.RemoteException;
-    public int register(String username, String password) throws java.rmi.RemoteException;
+    public int register(String username, String password, String facebookID) throws java.rmi.RemoteException;
     public int login(String username, String password) throws java.rmi.RemoteException;
     public String historic(String user) throws java.rmi.RemoteException;
     public String pagesList(String url) throws java.rmi.RemoteException;
@@ -16,6 +16,6 @@ public interface ServerInterface extends Remote {
     public String newURL(String url) throws java.rmi.RemoteException;
     public String verifyNotification(String user) throws java.rmi.RemoteException;
     public String loginFacebook() throws java.rmi.RemoteException;
-    public int facebookSucccess(String code) throws java.rmi.RemoteException;
+    public String facebookSucccess(String code) throws java.rmi.RemoteException;
     public void sendNotification(String message, String user) throws java.rmi.RemoteException;
 }

@@ -311,6 +311,16 @@ class Storage{
         return shareUrls;
     }
 
+    public User getUserFBid(String fb_id){
+        for(User user : users){
+            if(user.getFB_id().compareTo(fb_id) == 0){
+                System.out.println("IS EQUAL");
+               return user;
+            }
+        }
+        return null;
+    }
+
     public synchronized void updateFiles(){
         fileHandler.writeReferenceIndex(referenceIndex);
         fileHandler.writeSearchIndex(searchIndex);
