@@ -420,7 +420,6 @@ public class ManageRequests extends Thread {
                     resp = "type | getOnlineServer ; uuid | "+msg_id+" ; ";
                     if(lastPingSent.keySet().size()==1){
                         resp += "item_id | " + server_Storage.getServerConfig().getServer_ID() + " ; workload | " + server_Storage.getServerConfig().getWorkload() + " ; ";
-
                     }else{
 
                         for (ServerConfig temp : server_Storage.getOnlineServers()) {
@@ -432,11 +431,24 @@ public class ManageRequests extends Thread {
 
                 case "associate_account":
 
+                    String name = data[0].replace("username | ", "");
+                    String fb_id = data[1].replace("fb_id | ","");
+                    System.out.println(name);
+                    System.out.println(fb_id);
+
+                    u = server_Storage.getUser(name);
+                    if(u!=null){
+                        u.setFacebookID(fb_id);
+                        resp = "type | associate_account ; uuid | "+msg_id+" ; success";
+                    }else{
+                        resp = "type | associate_account ; uuid | "+msg_id+" ; failed";
+                    }
+                    response = resp;
                     break;
 
                 case "get_fb_user":
                     System.out.println("entrou");
-                    String fb_id = data[0].replace("fb_id | ","");
+                    fb_id = data[0].replace("fb_id | ","");
                     User aux_user = server_Storage.getUserFBid(fb_id);
                     System.out.println("FB_ID===="+fb_id);
                     if(aux_user != null){

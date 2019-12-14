@@ -27,6 +27,9 @@ class User implements Serializable {
         return this.facebookID;
     }
 
+    public void setFacebookID(String id){
+        this.facebookID = id;
+    }
     public boolean isAdmin() {
         return isAdmin;
     }

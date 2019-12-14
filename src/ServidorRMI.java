@@ -545,18 +545,19 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     @Override
-    public String facebookSucccess(String code) throws RemoteException {
+    public String facebookSucccess(String code, String user) throws RemoteException {
         String PROTECTED_RESOURCE_URL = "https://graph.facebook.com/me";
         Verifier verifier = new Verifier(code);
         // Trade the Request Token and Verfier for the Access Token
         Token accessToken = service.getAccessToken(null, verifier);
 
 //        System.out.println("(if your curious it looks like this: " + accessToken + " )");
-        System.out.println("ENTROU AQQUI");
+        System.out.println("USER=====");
+        System.out.println(user);
         OAuthRequest request = new OAuthRequest(Verb.GET, PROTECTED_RESOURCE_URL, service);
         service.signRequest(accessToken, request);
         Response response = request.send();
-
+        String resp="";
         Object obj = null;
         try {
             obj = new JSONParser().parse(response.getBody());
@@ -569,15 +570,57 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         System.out.println(jo.get("id"));
         String fb_id = (String) jo.get("id");
         System.out.println(fb_id);
+        if(user==null) {
 
-        int perk = 0;
-        //check if user already exists
-        //type | get_fb_user ; uuid | uuid ; fb_id | fb_id;
-        //recebe type | get_fb_user ; uuid | uuid ; username | username ; perk | perk ;
+
+            int perk = 0;
+            //check if user already exists
+            //type | get_fb_user ; uuid | uuid ; fb_id | fb_id;
+            //recebe type | get_fb_user ; uuid | uuid ; username | username ; perk | perk ;
+            uuid = UUID.randomUUID();
+            String requestMulticast = "type | get_fb_user ; uuid | " + uuid + " ; fb_id | " + fb_id;
+            System.out.println("AQUI");
+            confirmRequest = "type | get_fb_user ; uuid | " + uuid;
+            String answer = dealWithRequest(requestMulticast);
+
+            while (!answer.contains(confirmRequest)) {
+                answer = dealWithRequest(requestMulticast);
+            }
+            if (answer.contains("failed")) {
+                perk = 3;
+            } else {
+                String[] tokens = answer.split(" ; ");
+                String[][] aux = new String[tokens.length - 2][2];
+
+
+                for (i = 2; i < tokens.length; i++) aux[i - 2] = tokens[i].split(" \\| ");
+
+                String username = aux[0][1];
+                perk = Integer.parseInt(aux[1][1]);
+                resp = "username | " + username + " ; perk | " + perk;
+            }
+
+            if (perk == 1 || perk == 2) {
+
+            } else {
+                //se nao existir regista e manda
+                perk = this.register(fb_id, fb_id, fb_id);
+                resp = "username | " + fb_id + " ; perk | " + perk;
+                System.out.println(resp);
+
+            }
+        }else{
+             resp = this.linkFacebook(user, fb_id);
+
+        }
+        return resp;
+    }
+
+    public String linkFacebook(String username, String fb_id){
         uuid = UUID.randomUUID();
-        String requestMulticast = "type | get_fb_user ; uuid | "+ uuid +" ; fb_id | "+fb_id;
+        String requestMulticast = "type | associate_account ; uuid | "+ uuid +" ; username | "+username+" ; fb_id | "+fb_id;
         System.out.println("AQUI");
-        confirmRequest = "type | get_fb_user ; uuid | " + uuid;
+        confirmRequest = "type | associate_account ; uuid | " + uuid;
         String answer = dealWithRequest(requestMulticast);
 
         while(!answer.contains(confirmRequest)) {
@@ -585,34 +628,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
         String resp = "";
         if(answer.contains("failed")){
-            perk = 3;
-        }else {
-            String[] tokens = answer.split(" ; ");
-            String[][] aux = new String[tokens.length - 2][2];
-
-
-            for (i = 2; i < tokens.length; i++) aux[i - 2] = tokens[i].split(" \\| ");
-
-            String username = aux[0][1];
-            perk = Integer.parseInt(aux[1][1]);
-            resp = "username | "+username+" ; perk | " + perk;
-        }
-
-        if(perk == 1 || perk == 2){
-
-        }else{
-            //se nao existir regista e manda
-            perk = this.register(fb_id,fb_id,fb_id);
-            resp = "username | "+fb_id+" ; perk | " + perk;
-            System.out.println(resp);
 
         }
-
-        return resp;
-    }
-
-    @Override
-    public String linkFacebook(String username, String fb_id){
         return "";
     }
 

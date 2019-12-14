@@ -19,8 +19,10 @@ public interface ServerInterface extends Remote {
     public String newURL(String url) throws java.rmi.RemoteException;
     public String verifyNotification(String user) throws java.rmi.RemoteException;
     public String loginFacebook() throws java.rmi.RemoteException;
-    public String facebookSucccess(String code) throws java.rmi.RemoteException;
+    public String facebookSucccess(String code, String username) throws java.rmi.RemoteException;
     public void sendNotification(String message, String user) throws java.rmi.RemoteException;
+
     public int newTomcat(ClientInterface rmiBean) throws java.rmi.RemoteException;
     public String linkFacebook(String username, String fb_id) throws java.rmi.RemoteException;
+
 }
