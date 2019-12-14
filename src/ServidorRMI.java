@@ -40,6 +40,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private int i;
     private String request, confirmRequest;
     private UUID uuid;
+    private String tenMostSearched = "", tenMostImportant = "";
 
     public String apiKey = "437779406889234";
     public String apiSecret = "719d5061f341819d7ec6dec5f1ba17a0";
@@ -51,8 +52,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 .scope("public_profile")
                 .build();
 
-    private ServidorRMI() throws RemoteException {
-    }
+    private ServidorRMI() throws RemoteException {}
 
     public static void main(String[] args) throws RemoteException {
         PORT = Integer.parseInt(args[0]);
@@ -159,8 +159,13 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
         }
-
-        return answer.split(" ; ")[2].split(" \\| ")[1];
+        if (answer.contains("failed"))
+            return "failed";
+        if(tenMostImportant().compareTo(tenMostImportant) == 0){
+            return "success";
+        }else{
+            return "success ;;; UPDATE";
+        }
     }
 
     public int addPort() throws RemoteException {
@@ -363,17 +368,33 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     //    1 - envia type | 10MostImportant ; uuid | uuid_example
 //    2 - recebe type | 10MostImportant ; uuid | uuid_example ; url | dsaf ; url | asdfa ...
     public String tenMostImportant() throws RemoteException {
+        String tenMostRequest;
         uuid = UUID.randomUUID();
         request = "type | 10MostImportant ; uuid | " + uuid;
-        return tenMost(request);
+        tenMostRequest = tenMost(request);
+        if (tenMostImportant.compareTo(tenMostRequest) == 0){
+            tenMostImportant = tenMostRequest;
+            return tenMostImportant;
+        }else{
+            tenMostImportant = tenMostRequest;
+            return tenMostRequest + " ;;; UPDATE";
+        }
     }
 
     //    1 - envia type | 10MostSearched ; uuid | uuid_example
 //    2 - recebe type | 10MostSearched ; uuid | uuid_example ; url | dsaf ; url | asdfa ...
     public String tenMostSearched() throws RemoteException {
+        String tenMostRequest;
         uuid = UUID.randomUUID();
         request = "type | 10MostSearched ; uuid | " + uuid;
-        return tenMost(request);
+        tenMostRequest = tenMost(request);
+        if (tenMostSearched.compareTo(tenMostRequest) == 0){
+            tenMostSearched = tenMostRequest;
+            return tenMostSearched;
+        }else{
+            tenMostSearched = tenMostRequest;
+            return tenMostRequest + " ;;; UPDATE";
+        }
     }
 
     private String tenMost(String request) {
@@ -402,7 +423,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String answer = dealWithRequest(request);
 
         while(!answer.contains(confirmRequest)) {
-            System.out.println("AQui");
             answer = dealWithRequest(request);
         }
 
@@ -423,6 +443,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 ans += aux[i][1] + "\n";
             }
         }
+        if(tenMostSearched().contains("UPDATE"))
+            ans += " ;;; UPDATE";
         //ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
@@ -483,6 +505,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    1 - envia type | notification ; uuid | uuid_example ; username | user ; message | sdaads
 //    2 - recebe type | notification ; uuid | uuid_example
     public void sendNotification(String s, String user) {
+        System.out.println("AQUIIIIIIII");
         for (ClientInterface c : clientsList) {
             try {
                 if (c.getUser() == null)
