@@ -259,6 +259,25 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         else return 2;
     }
 
+    public int register(String username, String password, String facebookID, ClientInterface tomcat) throws RemoteException {
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | status ; uuid | "+ uuid;
+        request = "type | register ; uuid | " + uuid + " ; username | " + username + " ; password | " + password + " ; facebookID | "+facebookID  ;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
+        if(answer.contains("failed")) return 3;
+        else if (answer.contains("true")) {
+            clientsList.add(tomcat);
+            return 1;
+        }
+        else{
+            clientsList.add(tomcat);
+            return 2;
+        }
+    }
+
     //    1 - envia type | login ; uuid | uuid_example ; username | username ; password | password;
 //    2 - recebe type | status ; uuid | uuid_example ; operation | failed ou entao type | status ; uuid | uuid_example ; operation | succeeded ; isAdmin | true (ou false)
     public int login(String username, String password) throws RemoteException {
@@ -273,6 +292,25 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         if(answer.contains("failed")) return 3;
         else if (answer.contains("true")) return 1;
         else return 2;
+    }
+
+    public int login(String username, String password, ClientInterface tomcat) throws RemoteException {
+        uuid = UUID.randomUUID();
+        confirmRequest = "type | status ; uuid | " + uuid;
+        request = "type | login ; uuid | "+uuid+" ; username | " + username + " ; password | " + password;
+        String answer = dealWithRequest(request);
+        while(!answer.contains(confirmRequest)){
+            answer = dealWithRequest(request);
+        }
+        System.out.println(clientsList.size());
+        if(answer.contains("failed")) return 3;
+        else if (answer.contains("true")) {
+            clientsList.add(tomcat);
+            return 1;
+        }else{
+            clientsList.add(tomcat);
+            return 2;
+        }
     }
 
     //    1 - envia type | historico ; uuid | uuid_example ; username | username
@@ -467,7 +505,14 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
     }
 
-//    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
+    @Override
+    public int newTomcat(ClientInterface rmiBean) throws RemoteException {
+        System.out.println(rmiBean.getUser() + " na lista de clientes");
+        clientsList.add(rmiBean);
+        return 0;
+    }
+
+    //    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
 //    2 - recebe type | give_privilege ; uuid | uuid_example ; operation | succeeded (ou failed)
     public boolean givePrivileges(String usernameOldAdmin, String usernameFutureAdmin) throws RemoteException {
         uuid = UUID.randomUUID();
