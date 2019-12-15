@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="cliente_rmi">
+    <output-path>$PROJECT_DIR$/out/artifacts/cliente_rmi</output-path>
+    <root id="archive" name="cliente_rmi.jar">
+      <element id="module-output" name="SD" />
+      <element id="library" level="project" name="async-http-client-1.9.31" />
+      <element id="library" level="project" name="javax.websocket-api-1.1" />
+      <element id="library" level="project" name="json_simple-1.1" />
+      <element id="library" level="project" name="jsoup-1.12.1" />
+      <element id="library" level="project" name="slf4j-api-1.7.13" />
+      <element id="artifact" artifact-name="meta2" />
+    </root>
+  </artifact>
+</component>

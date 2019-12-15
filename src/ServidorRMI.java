@@ -254,6 +254,14 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 clientsList.remove(client);
             }
         }
+        for (ClientInterface client : browserUsers) {
+            try {
+                if(client.getUser().equals(user))
+                    browserUsers.remove(client);
+            } catch (RemoteException e) {
+                browserUsers.remove(client);
+            }
+        }
         return true;
     }
 
@@ -566,6 +574,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         for(ClientInterface c : browserUsers){
 
             try {
+                c.notification("FUNCIONOU");
                 System.out.println("DEBUG TEN MOST");
                 c.writeTenMostSearch(tenMostSearched);
             } catch (RemoteException e) {
