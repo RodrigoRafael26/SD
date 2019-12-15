@@ -172,7 +172,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return "success";
         }else{
             this.updateTenMostImportant(newList);
-            return "success ;;; UPDATE";
+            return "";
         }
     }
 
@@ -353,7 +353,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 //    2 - recebe type | url_references ; uuid | uuid_example ; item_count | 123 ; url | dsaf ; url | asdfa ...
     public String pagesList(String url) throws RemoteException {
         uuid = UUID.randomUUID();
-        confirmRequest = "type | status ; uuid | " + uuid;
+        confirmRequest = "type | url_references ; uuid | " + uuid;
         request = "type | url_references ; uuid | " + uuid + " ; url | " + url;
         String answer = dealWithRequest(request);
         while(!answer.contains(confirmRequest)){
@@ -503,7 +503,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         try {
             size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
         }catch (NumberFormatException e){
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         String[][] aux = new String[tokens.length-2][];
         if (size == 0){
