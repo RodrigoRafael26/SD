@@ -164,12 +164,14 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         while(!answer.contains(confirmRequest)){
             answer = dealWithRequest(request);
         }
+        String newList = this.tenMostImportant();
+        System.out.println("IS EQUAL??? "+ newList.compareTo(tenMostImportant));
         if (answer.contains("failed"))
             return "failed";
-        if(tenMostImportant().compareTo(tenMostImportant) == 0){
+        if(newList.compareTo(tenMostImportant) == 0){
             return "success";
         }else{
-            this.updateTenMostImportant(tenMostImportant);
+            this.updateTenMostImportant(newList);
             return "success ;;; UPDATE";
         }
     }
@@ -574,10 +576,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     }
 
     public void updateTenMostImportant(String tenMost){
+        System.out.println("entrou na atualizacao");
         for(ClientInterface c : clientsList){
             try {
                 if(c.getPerk()==1){
-                    c.writeTenMostImportant(this.tenMostImportant);
+                    c.writeTenMostImportant(tenMost );
                 }
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -587,7 +590,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         for(ClientInterface c : browserUsers){
 
             try {
-                c.writeTenMostSearch(this.tenMostImportant);
+                System.out.println("ENVIA A ATUALIZACAO");
+                System.out.println(tenMost);
+                c.writeTenMostImportant(tenMost);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
