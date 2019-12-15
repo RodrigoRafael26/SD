@@ -16,11 +16,27 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static String RMIhost;
     private static String myHost;
 
+
+
     private ClienteRMI() throws RemoteException {
     }
 
     private static ServerInterface getRMI() throws RemoteException {
         return serverInterface;
+    }
+
+    public int getPerk(){
+        return perk;
+    }
+
+    @Override
+    public void writeTenMostSearch(String message) {
+        //meter aqui a atualização da pagina
+    }
+
+    @Override
+    public void writeTenMostImportant(String message) {
+        //meter aqui a atualização da pagina admin
     }
 
     //    tenta conectar ao registry backup

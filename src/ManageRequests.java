@@ -213,10 +213,11 @@ public class ManageRequests extends Thread {
                         }
                         searchResults = merged;
                     }
+                    if(username.compareTo("null")!=0) server_Storage.getUser(username).addToHist(pesquisa);
 
                     //order search results
                     if(!opFailed) {
-                        if(username.compareTo("null")!=0) server_Storage.getUser(username).addToHist(pesquisa);
+//                        if(username.compareTo("null")!=0) server_Storage.getUser(username).addToHist(pesquisa);
                         String[] array = listToArray(searchResults);
 
                         //sort array by importance (number of links that reference eachURL)

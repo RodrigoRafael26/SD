@@ -369,7 +369,7 @@ class KeepAlive extends Thread{
                 }
 
                 try{
-                    this.sleep(1000);
+                    this.sleep(5000);
 
 
                 }catch(InterruptedException e){}

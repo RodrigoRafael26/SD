@@ -42,6 +42,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     private UUID uuid;
     private String tenMostSearched = "", tenMostImportant = "";
 
+
+    //web clients
+    private CopyOnWriteArrayList<ClientInterface> browserUsers = new CopyOnWriteArrayList<>();
+
+
     public String apiKey = "437779406889234";
     public String apiSecret = "719d5061f341819d7ec6dec5f1ba17a0";
     public OAuthService service = new ServiceBuilder()
@@ -164,6 +169,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         if(tenMostImportant().compareTo(tenMostImportant) == 0){
             return "success";
         }else{
+            this.updateTenMostImportant(tenMostImportant);
             return "success ;;; UPDATE";
         }
     }
@@ -299,24 +305,24 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         else return 2;
     }
 
-    public int login(String username, String password, ClientInterface tomcat) throws RemoteException {
-        uuid = UUID.randomUUID();
-        confirmRequest = "type | status ; uuid | " + uuid;
-        request = "type | login ; uuid | "+uuid+" ; username | " + username + " ; password | " + password;
-        String answer = dealWithRequest(request);
-        while(!answer.contains(confirmRequest)){
-            answer = dealWithRequest(request);
-        }
-        System.out.println(clientsList.size());
-        if(answer.contains("failed")) return 3;
-        else if (answer.contains("true")) {
-            clientsList.add(tomcat);
-            return 1;
-        }else{
-            clientsList.add(tomcat);
-            return 2;
-        }
-    }
+//    public int login(String username, String password, ClientInterface tomcat) throws RemoteException {
+//        uuid = UUID.randomUUID();
+//        confirmRequest = "type | status ; uuid | " + uuid;
+//        request = "type | login ; uuid | "+uuid+" ; username | " + username + " ; password | " + password;
+//        String answer = dealWithRequest(request);
+//        while(!answer.contains(confirmRequest)){
+//            answer = dealWithRequest(request);
+//        }
+//        System.out.println(clientsList.size());
+//        if(answer.contains("failed")) return 3;
+//        else if (answer.contains("true")) {
+//            clientsList.add(tomcat);
+//            return 1;
+//        }else{
+//            clientsList.add(tomcat);
+//            return 2;
+//        }
+//    }
 
     //    1 - envia type | historico ; uuid | uuid_example ; username | username
 //    2 - recebe type | historico ; uuid | uuid_example ; value | addas ; value | asfdsa
@@ -392,7 +398,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             tenMostSearched = tenMostRequest;
             return tenMostSearched;
         }else{
-            tenMostSearched = tenMostRequest;
+//            tenMostSearched = tenMostRequest;
+            this.updateTenMostSearched(tenMostRequest);
             return tenMostRequest + " ;;; UPDATE";
         }
     }
@@ -455,6 +462,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
         while (true) {
             try {
+
                 client = (ClientInterface) LocateRegistry.getRegistry(clientIP, port).lookup("Benfica");
                 System.out.println(client == null);
                 break;
@@ -478,6 +486,10 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         int size = 0;
         uuid = UUID.randomUUID();
         confirmRequest = "type | notifications ; uuid | " + uuid;
+        if(username == null){
+            System.out.println("FDS");
+            return "";
+        }
         request = "type | get_notifications ; uuid | " + uuid + " ; username | " + username;
         String answer = dealWithRequest(request);
 
@@ -530,10 +542,59 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
 
     @Override
     public int newTomcat(ClientInterface rmiBean) throws RemoteException {
-        System.out.println(rmiBean.getUser() + " na lista de clientes");
-        clientsList.add(rmiBean);
+        //ClientInterface client;
+        //System.out.println("port: " + this.port + " | clientIP: " + clientIP);
+
+        browserUsers.add(rmiBean);
         return 0;
     }
+
+    public void updateTenMostSearched(String tenMostSearched){
+        System.out.println("ENTROU NO UPDATE");
+        for(ClientInterface c : clientsList){
+            try {
+                if(c.getPerk()==1){
+                    c.writeTenMostSearch(tenMostSearched);
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(ClientInterface c : browserUsers){
+
+            try {
+                System.out.println("DEBUG TEN MOST");
+                c.writeTenMostSearch(tenMostSearched);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public void updateTenMostImportant(String tenMost){
+        for(ClientInterface c : clientsList){
+            try {
+                if(c.getPerk()==1){
+                    c.writeTenMostImportant(this.tenMostImportant);
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(ClientInterface c : browserUsers){
+
+            try {
+                c.writeTenMostSearch(this.tenMostImportant);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
 
     //    1 - envia type | give_privilege ; uuid | uuid_example ; username | futureAdmin
 //    2 - recebe type | give_privilege ; uuid | uuid_example ; operation | succeeded (ou failed)

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 class User implements Serializable {
-    private String username;
-    private String password;
-    private boolean isAdmin;
-    private String facebookID;
-    private CopyOnWriteArrayList<String> searchHistory;
-    private CopyOnWriteArrayList<String> notifications;
-    private int userID;
+        private String username;
+        private String password;
+        private boolean isAdmin;
+        private String facebookID;
+        private CopyOnWriteArrayList<String> searchHistory;
+        private CopyOnWriteArrayList<String> notifications;
+        private int userID;
 
     User(String username, String password, boolean isAdmin, int userID, String facebookID) {
         this.username = username;
