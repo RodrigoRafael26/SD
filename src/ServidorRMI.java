@@ -172,7 +172,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return "success";
         }else{
             this.updateTenMostImportant(newList);
-            return "success ;;; UPDATE";
+            return "success";
         }
     }
 
@@ -385,7 +385,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return tenMostImportant;
         }else{
             tenMostImportant = tenMostRequest;
-            return tenMostRequest + " ;;; UPDATE";
+            return tenMostRequest;
         }
     }
 
@@ -402,7 +402,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }else{
 //            tenMostSearched = tenMostRequest;
             this.updateTenMostSearched(tenMostRequest);
-            return tenMostRequest + " ;;; UPDATE";
+            return tenMostRequest;
         }
     }
 
@@ -435,6 +435,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             answer = dealWithRequest(request);
         }
 
+        System.out.println(tenMostSearched());
+
         String[] tokens = answer.split(" ; ");
         String[][] aux = new String[tokens.length-2][2];
 
@@ -452,8 +454,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
                 ans += aux[i][1] + "\n";
             }
         }
-        if(tenMostSearched().contains("UPDATE"))
-            ans += " ;;; UPDATE";
+//        if(tenMostSearched().contains("UPDATE"))
+//            ans += " ;;; UPDATE";
         //ans += "\nExistem no total " + size + " resultados para a tua pesquisa";
         return ans;
     }
@@ -502,9 +504,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         String[] tokens = answer.split(" ; ");
         try {
             size = Integer.parseInt(tokens[2].split(" \\| ")[1]);
-        }catch (NumberFormatException e){
-            e.printStackTrace();
-        }
+        }catch (NumberFormatException e){}
         String[][] aux = new String[tokens.length-2][];
         if (size == 0){
             return "";

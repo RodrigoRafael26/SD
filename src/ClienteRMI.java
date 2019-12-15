@@ -16,8 +16,6 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     private static String RMIhost;
     private static String myHost;
 
-
-
     private ClienteRMI() throws RemoteException {
     }
 
@@ -32,11 +30,17 @@ public class ClienteRMI extends UnicastRemoteObject implements ClientInterface {
     @Override
     public void writeTenMostSearch(String message) {
         //meter aqui a atualização da pagina
+        if(getPerk() == 1){
+            System.out.println("Ten Most Searched Updated:\n" + message);
+        }
     }
 
     @Override
     public void writeTenMostImportant(String message) {
         //meter aqui a atualização da pagina admin
+        if(getPerk() == 1){
+            System.out.println("Ten Most Important Updated:\n" + message);
+        }
     }
 
     //    tenta conectar ao registry backup
