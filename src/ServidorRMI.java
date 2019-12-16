@@ -62,6 +62,16 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
     public static void main(String[] args) throws RemoteException {
         PORT = Integer.parseInt(args[0]);
         MULTICAST_ADDRESS = args[1];
+//        System.getProperties().put("java.security.policy", "policy.all");
+//        System.setSecurityManager(new RMISecurityManager());
+//
+//        serverInterface = new ServidorRMI();
+//        try {
+//            Naming.rebind("XPTO", serverInterface);
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
+
 
         try {
 
@@ -393,6 +403,7 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             return tenMostImportant;
         }else{
             tenMostImportant = tenMostRequest;
+//            this.updateTenMostImportant(tenMostRequest);
             return tenMostRequest;
         }
     }
@@ -408,8 +419,8 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             tenMostSearched = tenMostRequest;
             return tenMostSearched;
         }else{
-//            tenMostSearched = tenMostRequest;
-            this.updateTenMostSearched(tenMostRequest);
+            tenMostSearched = tenMostRequest;
+//            this.updateTenMostSearched(tenMostRequest);
             return tenMostRequest;
         }
     }
@@ -443,7 +454,9 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
             answer = dealWithRequest(request);
         }
 
-        System.out.println(tenMostSearched());
+        this.updateTenMostSearched(tenMostSearched());
+
+//        System.out.println(tenMostSearched());
 
         String[] tokens = answer.split(" ; ");
         String[][] aux = new String[tokens.length-2][2];
@@ -456,11 +469,11 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         }
 
         for(i = 3; i < tokens.length; i++) aux[i-3] = tokens[i].split(" \\| ");
-        for(i = 0; i < aux.length; i++) {
+        for(i = 0; i < aux.length; i+=3) {
             if(aux[i][1]!=null){
-
-                ans += aux[i][1] + "\n";
+                ans += aux[i][1] + ";;;" + aux[i+1][1] + ";;;" + aux[i+2][1] + ";;;";
             }
+
         }
 //        if(tenMostSearched().contains("UPDATE"))
 //            ans += " ;;; UPDATE";
@@ -574,7 +587,6 @@ public class ServidorRMI extends UnicastRemoteObject implements ServerInterface 
         for(ClientInterface c : browserUsers){
 
             try {
-                c.notification("FUNCIONOU");
                 System.out.println("DEBUG TEN MOST");
                 c.writeTenMostSearch(tenMostSearched);
             } catch (RemoteException e) {
